@@ -173,10 +173,11 @@ function getActionConstant(actionType) {
 }
 
 /**
+ * アプリケーション設定取得関数（TDD対象）
+ */
 function getAppConfig(configKey) {
   if (!APP_CONFIG.hasOwnProperty(configKey)) {
     throw new Error('Unknown config key: ' + configKey);
   }
   return APP_CONFIG[configKey];
-}  return APP_CONFIG[configKey];
-} 
+}

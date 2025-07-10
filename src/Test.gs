@@ -39,6 +39,12 @@ function assertFalse(condition, message) {
   }
 }
 
+function assertNull(value, message) {
+  if (value !== null) {
+    throw new Error(message || 'Value should be null');
+  }
+}
+
 /**
  * 個別テスト実行関数
  */
@@ -141,6 +147,7 @@ function testEnvironmentCheck() {
     assertNotNull('test');
     assertTrue(true);
     assertFalse(false);
+    assertNull(null);
     
     console.log('✓ 全てのアサーション関数が正常に動作しています');
     return true;
@@ -168,6 +175,9 @@ function runModuleTests(moduleName) {
     case 'SpreadsheetManager':
       runSpreadsheetManagerTests();
       break;
+    case 'BusinessLogic':
+      runBusinessLogicTests();
+      break;
     default:
       console.log('不明なモジュール名: ' + moduleName);
       return;
@@ -190,6 +200,10 @@ function runQuickTests() {
   // 最新実装のテストを優先実行
   runTest(testGetColumnIndex_Employee_Name_ReturnsCorrectIndex, 'testGetColumnIndex_Employee_Name_ReturnsCorrectIndex');
   runTest(testFormatDate_ValidDate_ReturnsFormattedString, 'testFormatDate_ValidDate_ReturnsFormattedString');
+  
+  // Phase 2: 業務ロジックのクイックテスト
+  runTest(testIsHoliday_Weekday_ReturnsFalse, 'testIsHoliday_Weekday_ReturnsFalse');
+  runTest(testCalcWorkTime_StandardWork_ReturnsCorrectTime, 'testCalcWorkTime_StandardWork_ReturnsCorrectTime');
   
   showTestSummary();
   

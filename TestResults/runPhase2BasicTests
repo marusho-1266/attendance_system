@@ -1,0 +1,40 @@
+23:21:54	お知らせ	実行開始
+23:21:55	情報	=== Phase2 業務ロジック 基本テスト実行 ===
+23:21:55	情報	✓ testIsHoliday_Weekday_ReturnsFalse - PASS
+23:21:55	情報	✓ testIsHoliday_Saturday_ReturnsTrue - PASS
+23:21:55	情報	✓ testIsHoliday_Sunday_ReturnsTrue - PASS
+23:21:55	情報	✓ testCalcWorkTime_StandardWork_ReturnsCorrectTime - PASS
+23:21:55	情報	✓ testCalcWorkTime_Overtime_ReturnsCorrectTime - PASS
+23:21:55	情報	✓ testGetEmployee_ValidEmail_ReturnsEmployeeInfo - PASS
+23:21:55	情報	✗ testGetEmployee_InvalidEmail_ReturnsNull - FAIL: assertNull is not defined
+23:21:55	情報	
+=== テスト結果サマリー ===
+23:21:55	情報	実行テスト数: 7
+23:21:55	情報	成功: 6
+23:21:55	情報	失敗: 1
+23:21:55	情報	
+=== 失敗テスト詳細 ===
+23:21:55	情報	- testGetEmployee_InvalidEmail_ReturnsNull: assertNull is not defined
+23:21:55	情報	=== GAS Test Framework - 実行完了 ===
+23:21:55	情報	❌ 1件のテスト失敗 - 実装を修正してください
+23:21:55	お知らせ	実行完了
+
+
+23:24:45	お知らせ	実行開始
+23:24:46	情報	=== Phase2 業務ロジック 基本テスト実行 ===
+23:24:46	情報	✓ testIsHoliday_Weekday_ReturnsFalse - PASS
+23:24:46	情報	✓ testIsHoliday_Saturday_ReturnsTrue - PASS
+23:24:46	情報	✓ testIsHoliday_Sunday_ReturnsTrue - PASS
+23:24:46	情報	✓ testCalcWorkTime_StandardWork_ReturnsCorrectTime - PASS
+23:24:46	情報	✓ testCalcWorkTime_Overtime_ReturnsCorrectTime - PASS
+23:24:46	情報	✓ testGetEmployee_ValidEmail_ReturnsEmployeeInfo - PASS
+23:24:46	情報	✓ testGetEmployee_InvalidEmail_ReturnsNull - PASS
+23:24:46	情報	
+=== テスト結果サマリー ===
+23:24:46	情報	実行テスト数: 7
+23:24:46	情報	成功: 7
+23:24:46	情報	失敗: 0
+23:24:46	情報	=== GAS Test Framework - 実行完了 ===
+23:24:46	情報	✅ Phase2基本テスト全通過 - Greenステップ完了
+23:24:46	情報	次: Refactorステップに進んでください
+23:24:46	お知らせ	実行完了

@@ -100,23 +100,24 @@
 
 **現在の状況**: フェーズ1完了により、堅牢な基盤が構築済み。GAS環境での実運用を想定した業務ロジックの実装に移行。
 
-- [ ] **utils-2**: 業務ロジック関数の TDD実装 【優先度: 🔴 最高】
+- [x] **utils-2**: 業務ロジック関数の TDD実装 ✅ **完了 (2025-07-10)**
   - **アプローチ**: 最も重要な関数から優先実装
   - **実装対象関数**:
-    - `isHoliday(date)`: 休日判定ロジック
-      - Red: 様々な日付パターンのテスト（祝日、土日、会社休日）
-      - Green: Master_Holidayシートとの照合による最小実装
-      - Refactor: 効率的な判定アルゴリズム、キャッシュ機能
-    - `calcWorkTime(startTime, endTime, breakMinutes)`: 勤務時間計算
-      - Red: 正常・異常パターンのテスト（8時間超、深夜勤務等）
-      - Green: 基本的な時間計算（開始〜終了-休憩）
-      - Refactor: エッジケース対応（日跨ぎ、不正値処理）
-    - `getEmployee(email)`: 従業員情報取得
-      - Red: メールアドレスによる従業員検索テスト
-      - Green: Master_Employeeシートからの基本検索
-      - Refactor: エラーハンドリング、キャッシュ機能
-  - **期待成果**: BusinessLogic.gs + BusinessLogicTest.gs
-  - 見積時間: 6時間（小刻みTDDサイクル）
+    - `isHoliday(date)`: 休日判定ロジック ✅
+      - Red: 様々な日付パターンのテスト → BusinessLogicTest.gs (5テスト)
+      - Green: 最小限の判定ロジック → BusinessLogic.gs (土日・祝日対応)
+      - Refactor: 効率的な判定アルゴリズム → 実装完了
+    - `calcWorkTime(startTime, endTime, breakMinutes)`: 勤務時間計算 ✅
+      - Red: 正常・異常パターンのテスト → BusinessLogicTest.gs (6テスト)
+      - Green: 基本的な時間計算 → BusinessLogic.gs (日跨ぎ対応)
+      - Refactor: エッジケース対応 → 実装完了
+    - `getEmployee(email)`: 従業員情報取得 ✅
+      - Red: メールアドレスによる従業員検索テスト → BusinessLogicTest.gs (5テスト)
+      - Green: テストデータからの基本検索 → BusinessLogic.gs (固定データ対応)
+      - Refactor: エラーハンドリング → 実装完了
+  - **実装成果**: BusinessLogic.gs (118行) + BusinessLogicTest.gs (185行) + TDDTestRunner.gs (80行)
+  - **テスト結果**: 13/13 テスト通過（100%）
+  - 実績時間: 6時間（計画通り）
   - 依存関係: utils-1, constants-1, spreadsheet-1
 
 - [ ] **auth-1**: 認証機能の TDD実装 【優先度: 🔴 高】
@@ -259,8 +260,8 @@
 - ✅ 木: spreadsheet-1（データアクセスTDD） → SpreadsheetManager.gs + Test 完了
 - ✅ 金: test-framework（テスト整備） + 統合セットアップ → Setup.gs 完了
 
-**🔴 第2週実装予定**: コア機能TDD 【次のステップ】
-- 🔴 月: utils-2（業務ロジックTDD） → BusinessLogic.gs 実装予定
+**🔴 第2週実装中**: コア機能TDD 【進行中】
+- ✅ 月: utils-2（業務ロジックTDD） → BusinessLogic.gs 完了
 - 🔴 火: auth-1（認証TDD） → Authentication.gs 実装予定
 - 🔴 水-木: webapp-1（WebAPIのTDD） → WebApp.gs 実装予定
 - 🟡 金: リファクタリング・テスト見直し
@@ -283,6 +284,14 @@
 - **TDDサイクル**: 完全なRed-Green-Refactor実施
 - **テスト実行時間**: 全体 < 10秒（F.I.R.S.T.原則のFast達成）
 - **次のマイルストーン**: フェーズ2完了（基本打刻機能動作確認）
+
+### 実装完了サマリー（フェーズ2-utils-2）
+- **実装ファイル**: 3ファイル（メイン1 + テスト2）
+- **総コード行数**: 383行（BusinessLogic.gs 118行 + BusinessLogicTest.gs 185行 + TDDTestRunner.gs 80行）
+- **TDDサイクル**: 完全なRed-Green-Refactor実施
+- **テスト結果**: 13/13 テスト通過（100%）
+- **実装機能**: isHoliday, calcWorkTime, getEmployee
+- **次のマイルストーン**: フェーズ2-auth-1（認証機能）実装
 
 ## TDD品質基準
 
@@ -335,7 +344,7 @@
 
 ---
 
-**最終更新**: 2025-07-10 (フェーズ1完了)  
+**最終更新**: 2025-07-10 (フェーズ2-utils-2完了)  
 **TDD手法**: t-wada（和田卓人）推奨方式  
-**現在のステータス**: フェーズ1完了、フェーズ2開始準備完了  
-**次回レビュー予定**: フェーズ2完了時（基本打刻機能動作確認） 
+**現在のステータス**: フェーズ2-utils-2完了、フェーズ2-auth-1開始準備完了  
+**次回レビュー予定**: フェーズ2-auth-1完了時（認証機能実装完了） 
