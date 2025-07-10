@@ -157,19 +157,26 @@ function getColumnIndex(sheetType, columnName) {
  * シート名取得関数（TDD対象）
  */
 function getSheetName(sheetType) {
+  if (!SHEET_NAMES.hasOwnProperty(sheetType)) {
+    throw new Error('Unknown sheet type: ' + sheetType);
+  }
   return SHEET_NAMES[sheetType];
 }
-
 /**
  * アクション定数取得関数（TDD対象）
  */
 function getActionConstant(actionType) {
+  if (!ACTIONS.hasOwnProperty(actionType)) {
+    throw new Error('Unknown action type: ' + actionType);
+  }
   return ACTIONS[actionType];
 }
 
 /**
- * 設定値取得関数（TDD対象）
- */
 function getAppConfig(configKey) {
+  if (!APP_CONFIG.hasOwnProperty(configKey)) {
+    throw new Error('Unknown config key: ' + configKey);
+  }
   return APP_CONFIG[configKey];
+}  return APP_CONFIG[configKey];
 } 
