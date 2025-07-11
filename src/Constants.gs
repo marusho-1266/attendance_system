@@ -82,6 +82,16 @@ var REQUEST_RESPONSE_COLUMNS = {
   STATUS: 6          // G列: Status
 };
 
+/**
+ * System_Config シートの列定義
+ */
+var SYSTEM_CONFIG_COLUMNS = {
+  CONFIG_KEY: 0,     // A列: 設定キー
+  CONFIG_VALUE: 1,   // B列: 設定値
+  DESCRIPTION: 2,    // C列: 説明
+  IS_ACTIVE: 3       // D列: 有効フラグ
+};
+
 // === アクション定数 ===
 
 /**
@@ -129,7 +139,8 @@ var SHEET_NAMES = {
   LOG_RAW: 'Log_Raw',
   DAILY_SUMMARY: 'Daily_Summary',
   MONTHLY_SUMMARY: 'Monthly_Summary',
-  REQUEST_RESPONSES: 'Request_Responses'
+  REQUEST_RESPONSES: 'Request_Responses',
+  SYSTEM_CONFIG: 'System_Config'
 };
 
 // === アプリケーション設定定数 ===
@@ -161,6 +172,8 @@ function getColumnIndex(sheetType, columnName) {
       return MONTHLY_SUMMARY_COLUMNS[columnName];
     case 'REQUEST_RESPONSES':
       return REQUEST_RESPONSE_COLUMNS[columnName];
+    case 'SYSTEM_CONFIG':
+      return SYSTEM_CONFIG_COLUMNS[columnName];
     default:
       throw new Error('Unknown sheet type: ' + sheetType);
   }

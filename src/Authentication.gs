@@ -102,13 +102,18 @@ function checkPermission(email, action) {
     return false; // 未認証ユーザーには権限なし
   }
   
-  // アクション妥当性チェック（最小実装）
+  // アクション妥当性チェック（Constants.gsのPERMISSION_ACTIONS使用）
   try {
-    var validActions = ['CLOCK_IN', 'CLOCK_OUT', 'BREAK_START', 'BREAK_END', 'ADMIN_ACCESS', 'VIEW_REPORTS', 'EDIT_MASTER'];
+    // PERMISSION_ACTIONS定数から有効なアクションリストを取得
+    var validActions = Object.keys(PERMISSION_ACTIONS).map(function(key) {
+      return PERMISSION_ACTIONS[key];
+    });
+    
     if (validActions.indexOf(action) === -1) {
       return false; // 無効なアクション
     }
   } catch (error) {
+    console.log('権限アクション検証エラー: ' + error.message);
     return false;
   }
   
@@ -118,8 +123,14 @@ function checkPermission(email, action) {
     return false;
   }
   
-  // 管理者専用アクションの場合
-  if (action === 'ADMIN_ACCESS' || action === 'VIEW_REPORTS' || action === 'EDIT_MASTER') {
+  // 管理者専用アクションの場合（PERMISSION_ACTIONS定数使用）
+  var adminActions = [
+    getPermissionAction('ADMIN_ACCESS'),
+    getPermissionAction('VIEW_REPORTS'), 
+    getPermissionAction('EDIT_MASTER')
+  ];
+  
+  if (adminActions.indexOf(action) !== -1) {
     // 管理者判定: 上司Gmailが空またはnullの場合は管理者とみなす（簡易実装）
     return isManager(email);
   }
@@ -129,25 +140,54 @@ function checkPermission(email, action) {
 }
 
 /**
- * 管理者判定関数（Green段階の簡易実装）
+ * 管理者判定関数（Refactor: 設定ベース実装）
  * @param {string} email - チェック対象のメールアドレス
  * @returns {boolean} 管理者の場合true
  */
 function isManager(email) {
-  // 簡易実装: 特定のメールアドレスまたは上司Gmailフィールドがnullの場合
-  var managerEmails = ['manager@example.com', 'dev-manager@example.com'];
-  
-  if (managerEmails.indexOf(email) !== -1) {
-    return true;
+  if (!email) {
+    return false;
   }
   
-  // または従業員マスタで上司Gmailが空の場合（トップレベル管理者）
-  var employee = getEmployee(email);
-  if (employee && (!employee.supervisorGmail || employee.supervisorGmail === '')) {
-    return true;
-  }
+  // メールアドレスを正規化
+  var normalizedEmail = email.trim().toLowerCase();
   
-  return false;
+  try {
+    // 1. System_Configシートから管理者メールリストを動的に取得
+    var managerEmails = getManagerEmails();
+    
+    if (managerEmails.length > 0 && managerEmails.indexOf(normalizedEmail) !== -1) {
+      logSecurityEvent('MANAGER_CHECK_CONFIG', email, 'Manager identified by System_Config');
+      return true;
+    }
+    
+    // 2. 従業員マスタで上司Gmailが空の場合（トップレベル管理者）
+    var employee = getEmployee(email);
+    if (employee && (!employee.supervisorGmail || employee.supervisorGmail.trim() === '')) {
+      logSecurityEvent('MANAGER_CHECK_HIERARCHY', email, 'Manager identified by employee hierarchy');
+      return true;
+    }
+    
+    // 3. フォールバック: 設定が読み込めない場合の緊急用ハードコード
+    if (managerEmails.length === 0) {
+      console.log('管理者設定が読み込めません。フォールバック処理を実行します。');
+      var fallbackManagers = ['manager@example.com', 'dev-manager@example.com'];
+      
+      if (fallbackManagers.indexOf(normalizedEmail) !== -1) {
+        logSecurityEvent('MANAGER_CHECK_FALLBACK', email, 'Manager identified by fallback configuration');
+        return true;
+      }
+    }
+    
+    return false;
+    
+  } catch (error) {
+    console.log('管理者判定エラー: ' + error.message);
+    logSecurityEvent('MANAGER_CHECK_ERROR', email, 'Manager check failed: ' + error.message);
+    
+    // エラー時のセーフフォールバック（セキュリティ優先で拒否）
+    return false;
+  }
 }
 
 // === セッション情報取得関数 ===
@@ -216,13 +256,26 @@ function logSecurityEvent(eventType, email, description) {
   
   try {
     var timestamp = new Date().toISOString();
+    
+    // Session.getActiveUser()のnullチェック
+    var currentUser = null;
+    try {
+      var activeUser = Session.getActiveUser();
+      if (activeUser && activeUser.getEmail) {
+        currentUser = activeUser.getEmail();
+      }
+    } catch (sessionError) {
+      // セッション取得エラーは無視（ログ記録を継続）
+      console.log('セッション取得エラー（ログ記録時）: ' + sessionError.message);
+    }
+    
     var logEntry = [
       timestamp,
       'SECURITY',
       eventType,
       email || 'unknown',
       description || 'No description',
-      Session.getActiveUser().getEmail() || 'system'
+      currentUser || 'system'
     ];
     
     // Log_Rawシートに記録

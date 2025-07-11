@@ -30,8 +30,13 @@ function setupAttendanceSystem() {
     setupSampleData();
     console.log('✓ サンプルデータ投入完了');
     
-    // 4. セットアップ確認テストの実行
-    console.log('4. セットアップ確認テスト...');
+    // 4. システム設定の初期化
+    console.log('4. システム設定の初期化...');
+    setupSystemConfigData();
+    console.log('✓ システム設定初期化完了');
+    
+    // 5. セットアップ確認テストの実行
+    console.log('5. セットアップ確認テスト...');
     runSystemIntegrationTest();
     console.log('✓ セットアップ確認完了');
     
@@ -174,7 +179,7 @@ function checkSetupStatus() {
     
     // シート状況確認
     console.log('\n=== シート状況 ===');
-    var sheetTypes = ['MASTER_EMPLOYEE', 'MASTER_HOLIDAY', 'LOG_RAW', 'DAILY_SUMMARY', 'MONTHLY_SUMMARY', 'REQUEST_RESPONSES'];
+    var sheetTypes = ['MASTER_EMPLOYEE', 'MASTER_HOLIDAY', 'LOG_RAW', 'DAILY_SUMMARY', 'MONTHLY_SUMMARY', 'REQUEST_RESPONSES', 'SYSTEM_CONFIG'];
     
     sheetTypes.forEach(function(sheetType) {
       var sheetName = getSheetName(sheetType);
@@ -208,7 +213,7 @@ function checkPhase1Completion() {
     completionChecks['テスト環境'] = testEnvironmentCheck();
     
     // 2. スプレッドシート確認
-    var requiredSheets = ['MASTER_EMPLOYEE', 'MASTER_HOLIDAY', 'LOG_RAW', 'DAILY_SUMMARY', 'MONTHLY_SUMMARY', 'REQUEST_RESPONSES'];
+    var requiredSheets = ['MASTER_EMPLOYEE', 'MASTER_HOLIDAY', 'LOG_RAW', 'DAILY_SUMMARY', 'MONTHLY_SUMMARY', 'REQUEST_RESPONSES', 'SYSTEM_CONFIG'];
     var allSheetsExist = requiredSheets.every(function(sheetType) {
       return sheetExists(getSheetName(sheetType));
     });

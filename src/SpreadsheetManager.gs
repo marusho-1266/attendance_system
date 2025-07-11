@@ -286,6 +286,32 @@ function setupRequestResponsesSheetHeader(sheet) {
 }
 
 /**
+ * System_Config シートのヘッダーを設定
+ * @param {Sheet} sheet - 対象シート
+ */
+function setupSystemConfigSheetHeader(sheet) {
+  if (!sheet) {
+    throw new Error('Invalid sheet parameter');
+  }
+  
+  var headers = [
+    '設定キー',
+    '設定値',
+    '説明',
+    '有効フラグ'
+  ];
+  
+  var headerRange = sheet.getRange(1, 1, 1, headers.length);
+  headerRange.setValues([headers]);
+  
+  // ヘッダー行のフォーマット設定
+  headerRange.setFontWeight('bold');
+  headerRange.setBackground('#e6e6e6');
+  
+  return sheet;
+}
+
+/**
  * すべての必要なシートを初期化
  * TDD段階的実装：6枚のシートを1枚ずつ追加
  */
@@ -322,6 +348,11 @@ function initializeAllSheets() {
     var requestResponsesSheet = getOrCreateSheet(getSheetName('REQUEST_RESPONSES'));
     setupRequestResponsesSheetHeader(requestResponsesSheet);
     console.log('✓ Request_Responses シートを初期化しました');
+    
+    // 7. System_Config シート
+    var systemConfigSheet = getOrCreateSheet(getSheetName('SYSTEM_CONFIG'));
+    setupSystemConfigSheetHeader(systemConfigSheet);
+    console.log('✓ System_Config シートを初期化しました');
     
     console.log('全シートの初期化が完了しました');
     return true;
