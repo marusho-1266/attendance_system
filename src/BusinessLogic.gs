@@ -111,29 +111,56 @@ function getEmployee(email) {
     throw new Error('Invalid email format');
   }
   
-  // 最小実装: テスト用の固定データ
-  // 実際のスプレッドシート検索は後でRefactor
-  var testEmployees = [
-    {
-      employeeId: 'EMP001',
-      name: '山田太郎',
-      gmail: 'yamada@example.com',
-      department: '開発部',
-      employmentType: '正社員',
-      supervisorGmail: 'manager@example.com',
-      startTime: '09:00',
-      endTime: '18:00'
+  // Green段階での実装: 実際のスプレッドシートデータを参照
+  try {
+    var sheetName = getSheetName('MASTER_EMPLOYEE');
+    var sheet = getSheet(sheetName);
+    var data = sheet.getDataRange().getValues();
+    
+    // ヘッダー行をスキップして検索
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      var rowEmail = row[getColumnIndex('EMPLOYEE', 'GMAIL')]; // C列のGmail
+      
+      if (rowEmail === email) {
+        return {
+          employeeId: row[getColumnIndex('EMPLOYEE', 'EMPLOYEE_ID')],
+          name: row[getColumnIndex('EMPLOYEE', 'NAME')],
+          gmail: row[getColumnIndex('EMPLOYEE', 'GMAIL')],
+          department: row[getColumnIndex('EMPLOYEE', 'DEPARTMENT')],
+          employmentType: row[getColumnIndex('EMPLOYEE', 'EMPLOYMENT_TYPE')],
+          supervisorGmail: row[getColumnIndex('EMPLOYEE', 'SUPERVISOR_GMAIL')],
+          startTime: row[getColumnIndex('EMPLOYEE', 'START_TIME')],
+          endTime: row[getColumnIndex('EMPLOYEE', 'END_TIME')]
+        };
+      }
     }
-  ];
-  
-  // メールアドレスで検索
-  for (var i = 0; i < testEmployees.length; i++) {
-    if (testEmployees[i].gmail === email) {
-      return testEmployees[i];
+    
+    return null; // 見つからない場合
+  } catch (error) {
+    console.log('getEmployee スプレッドシート検索エラー: ' + error.message);
+    // フォールバック: テスト用固定データ
+    var testEmployees = [
+      {
+        employeeId: 'EMP001',
+        name: '田中太郎',
+        gmail: 'tanaka@example.com',
+        department: '営業部',
+        employmentType: '正社員',
+        supervisorGmail: 'manager@example.com',
+        startTime: '09:00',
+        endTime: '18:00'
+      }
+    ];
+    
+    for (var i = 0; i < testEmployees.length; i++) {
+      if (testEmployees[i].gmail === email) {
+        return testEmployees[i];
+      }
     }
+    
+    return null;
   }
-  
-  return null; // 見つからない場合
 }
 
 // === ユーティリティ関数 ===

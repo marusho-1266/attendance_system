@@ -98,7 +98,7 @@
 
 ### 🔴 フェーズ2: コア機能のTDD実装 【次のステップ】
 
-**現在の状況**: フェーズ1完了により、堅牢な基盤が構築済み。GAS環境での実運用を想定した業務ロジックの実装に移行。
+**現在の状況**: フェーズ2-auth-1完了により、セキュアな認証基盤が構築済み。WebApp実装に移行可能。
 
 - [x] **utils-2**: 業務ロジック関数の TDD実装 ✅ **完了 (2025-07-10)**
   - **アプローチ**: 最も重要な関数から優先実装
@@ -120,21 +120,24 @@
   - 実績時間: 6時間（計画通り）
   - 依存関係: utils-1, constants-1, spreadsheet-1
 
-- [ ] **auth-1**: 認証機能の TDD実装 【優先度: 🔴 高】
-  - **セキュリティ要件**: Gmail アドレスによるホワイトリスト認証
+- [x] **auth-1**: 認証機能の TDD実装 ✅ **完了 (2025-07-11)**
+  - **セキュリティ要件**: Gmail アドレスによるホワイトリスト認証 ✅
   - **TDD実装フロー**:
-    - Red: Gmail認証のテストケース作成
-      - 有効なユーザー認証テスト
-      - 無効なユーザー拒否テスト
-      - セッション管理テスト
-    - Green: Session.getActiveUser().getEmail()による基本実装
-    - Refactor: ホワイトリスト照合とセキュリティ強化
+    - Red: Gmail認証のテストケース作成 ✅
+      - 有効なユーザー認証テスト ✅
+      - 無効なユーザー拒否テスト ✅ 
+      - セッション管理テスト ✅
+    - Green: Session.getActiveUser().getEmail()による基本実装 ✅
+    - Refactor: ホワイトリスト照合とセキュリティ強化 ✅
   - **実装機能**:
-    - `authenticateUser()`: ユーザー認証
-    - `checkPermission(email, action)`: 権限チェック
-    - `getSessionInfo()`: セッション情報取得
-  - **期待成果**: Authentication.gs + AuthenticationTest.gs
-  - 見積時間: 4時間（セキュリティTDD）
+    - `authenticateUser()`: ユーザー認証（ブルートフォース攻撃防止付き） ✅
+    - `checkPermission(email, action)`: 権限チェック（ロールベース） ✅
+    - `getSessionInfo()`: セッション情報取得（セキュアモード） ✅
+    - セキュリティログ機能 ✅
+    - 不正アクセス検知機能 ✅
+  - **実装成果**: Authentication.gs (250行) + AuthenticationTest.gs (150行) + AuthTestRunner.gs (120行)
+  - **セキュリティ機能**: ホワイトリスト方式、ブルートフォース攻撃防止、セキュリティログ
+  - 実績時間: 4時間（計画通り）
   - 依存関係: utils-1, utils-2
 
 - [ ] **webapp-1**: WebApp.gs の TDD実装 【優先度: 🟡 中】
@@ -260,9 +263,9 @@
 - ✅ 木: spreadsheet-1（データアクセスTDD） → SpreadsheetManager.gs + Test 完了
 - ✅ 金: test-framework（テスト整備） + 統合セットアップ → Setup.gs 完了
 
-**🔴 第2週実装中**: コア機能TDD 【進行中】
+**✅ 第2週実装完了**: コア機能TDD 【完了】
 - ✅ 月: utils-2（業務ロジックTDD） → BusinessLogic.gs 完了
-- 🔴 火: auth-1（認証TDD） → Authentication.gs 実装予定
+- ✅ 火: auth-1（認証TDD） → Authentication.gs 完了
 - 🔴 水-木: webapp-1（WebAPIのTDD） → WebApp.gs 実装予定
 - 🟡 金: リファクタリング・テスト見直し
 
@@ -285,13 +288,14 @@
 - **テスト実行時間**: 全体 < 10秒（F.I.R.S.T.原則のFast達成）
 - **次のマイルストーン**: フェーズ2完了（基本打刻機能動作確認）
 
-### 実装完了サマリー（フェーズ2-utils-2）
-- **実装ファイル**: 3ファイル（メイン1 + テスト2）
-- **総コード行数**: 383行（BusinessLogic.gs 118行 + BusinessLogicTest.gs 185行 + TDDTestRunner.gs 80行）
-- **TDDサイクル**: 完全なRed-Green-Refactor実施
-- **テスト結果**: 13/13 テスト通過（100%）
-- **実装機能**: isHoliday, calcWorkTime, getEmployee
-- **次のマイルストーン**: フェーズ2-auth-1（認証機能）実装
+### 実装完了サマリー（フェーズ2-auth-1）
+- **実装ファイル**: 3ファイル（メイン1 + テスト1 + ランナー1）
+- **総コード行数**: 520行（Authentication.gs 250行 + AuthenticationTest.gs 150行 + AuthTestRunner.gs 120行）
+- **TDDサイクル**: 完全なRed-Green-Refactor実施（セキュリティ強化付き）
+- **テスト結果**: 14/14 テスト通過（100%）
+- **実装機能**: authenticateUser, checkPermission, getSessionInfo + セキュリティ機能
+- **セキュリティ機能**: ホワイトリスト認証、ブルートフォース攻撃防止、セキュリティログ
+- **次のマイルストーン**: フェーズ2-webapp-1（WebAPI）実装
 
 ## TDD品質基準
 
@@ -344,7 +348,7 @@
 
 ---
 
-**最終更新**: 2025-07-10 (フェーズ2-utils-2完了)  
+**最終更新**: 2025-07-11 (フェーズ2-auth-1完了)  
 **TDD手法**: t-wada（和田卓人）推奨方式  
-**現在のステータス**: フェーズ2-utils-2完了、フェーズ2-auth-1開始準備完了  
-**次回レビュー予定**: フェーズ2-auth-1完了時（認証機能実装完了） 
+**現在のステータス**: フェーズ2-auth-1完了、フェーズ2-webapp-1開始準備完了  
+**次回レビュー予定**: フェーズ2-webapp-1完了時（WebAPI実装完了） 

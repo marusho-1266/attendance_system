@@ -94,6 +94,19 @@ var ACTIONS = {
   BREAK_END: 'BRK_OUT'      // 休憩終了
 };
 
+/**
+ * 権限アクション定数（認証機能用）
+ */
+var PERMISSION_ACTIONS = {
+  CLOCK_IN: 'CLOCK_IN',         // 打刻権限
+  CLOCK_OUT: 'CLOCK_OUT',       // 退勤権限
+  BREAK_START: 'BREAK_START',   // 休憩開始権限
+  BREAK_END: 'BREAK_END',       // 休憩終了権限
+  ADMIN_ACCESS: 'ADMIN_ACCESS', // 管理者権限
+  VIEW_REPORTS: 'VIEW_REPORTS', // レポート閲覧権限
+  EDIT_MASTER: 'EDIT_MASTER'    // マスタ編集権限
+};
+
 // === 申請ステータス定数 ===
 
 /**
@@ -180,4 +193,14 @@ function getAppConfig(configKey) {
     throw new Error('Unknown config key: ' + configKey);
   }
   return APP_CONFIG[configKey];
+}
+
+/**
+ * 権限アクション定数取得関数（TDD対象）
+ */
+function getPermissionAction(actionType) {
+  if (!PERMISSION_ACTIONS.hasOwnProperty(actionType)) {
+    throw new Error('Unknown permission action type: ' + actionType);
+  }
+  return PERMISSION_ACTIONS[actionType];
 }
