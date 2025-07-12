@@ -75,7 +75,9 @@ function setupSampleEmployeeData() {
   var employeeData = [
     ['EMP001', '田中太郎', 'tanaka@example.com', '営業部', '正社員', 'manager@example.com', '09:00', '18:00'],
     ['EMP002', '佐藤花子', 'sato@example.com', '開発部', '正社員', 'dev-manager@example.com', '09:30', '18:30'],
-    ['EMP003', '鈴木次郎', 'suzuki@example.com', '営業部', 'パート', 'manager@example.com', '10:00', '15:00']
+    ['EMP003', '鈴木次郎', 'suzuki@example.com', '営業部', 'パート', 'manager@example.com', '10:00', '15:00'],
+    ['EMP004', '管理者太郎', 'manager@example.com', '管理部', '正社員', '', '09:00', '18:00'],
+    ['EMP005', '開発管理者', 'dev-manager@example.com', '開発部', '正社員', '', '09:00', '18:00']
   ];
   
   var sheetName = getSheetName('MASTER_EMPLOYEE');

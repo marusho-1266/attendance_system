@@ -1,0 +1,50 @@
+15:12:01	お知らせ	実行開始
+15:12:01	情報	=== 認証機能テスト開始 ===
+15:12:01	情報	テスト環境準備: 失敗回数をリセット中...
+15:12:01	情報	認証キャッシュを初期化しました
+15:12:02	情報	設定値キャッシュ読み込み完了: 4件
+15:12:02	情報	管理者メール取得: 2件
+15:12:03	情報	テスト環境準備: 失敗回数とキャッシュをリセット完了
+15:12:03	情報	実行予定テスト数: 14
+15:12:03	情報	実行中: testAuthenticateUser_ValidUser_ReturnsTrue
+15:12:03	情報	✓ PASS: testAuthenticateUser_ValidUser_ReturnsTrue
+15:12:03	情報	実行中: testAuthenticateUser_InvalidUser_ReturnsFalse
+15:12:05	情報	認証処理時間警告: 1472ms for notfound@example.com
+15:12:05	情報	✓ PASS: testAuthenticateUser_InvalidUser_ReturnsFalse
+15:12:05	情報	実行中: testAuthenticateUser_EmptyEmail_ReturnsFalse
+15:12:06	情報	認証処理時間警告: 1321ms for 
+15:12:06	情報	✓ PASS: testAuthenticateUser_EmptyEmail_ReturnsFalse
+15:12:06	情報	実行中: testAuthenticateUser_NullEmail_ReturnsFalse
+15:12:06	情報	✓ PASS: testAuthenticateUser_NullEmail_ReturnsFalse
+15:12:06	情報	実行中: testAuthenticateUser_InvalidEmailFormat_ReturnsFalse
+15:12:07	情報	✓ PASS: testAuthenticateUser_InvalidEmailFormat_ReturnsFalse
+15:12:07	情報	実行中: testCheckPermission_ValidUser_ClockIn_ReturnsTrue
+15:12:07	情報	✓ PASS: testCheckPermission_ValidUser_ClockIn_ReturnsTrue
+15:12:07	情報	実行中: testCheckPermission_InvalidUser_ClockIn_ReturnsFalse
+15:12:08	情報	認証処理時間警告: 1161ms for notfound@example.com
+15:12:08	情報	✓ PASS: testCheckPermission_InvalidUser_ClockIn_ReturnsFalse
+15:12:08	情報	実行中: testCheckPermission_Manager_AdminAction_ReturnsTrue
+15:12:08	情報	管理者メール取得: 2件
+15:12:09	情報	✓ PASS: testCheckPermission_Manager_AdminAction_ReturnsTrue
+15:12:09	情報	実行中: testCheckPermission_RegularUser_AdminAction_ReturnsFalse
+15:12:10	情報	✓ PASS: testCheckPermission_RegularUser_AdminAction_ReturnsFalse
+15:12:10	情報	実行中: testCheckPermission_ValidUser_InvalidAction_ReturnsFalse
+15:12:10	情報	✓ PASS: testCheckPermission_ValidUser_InvalidAction_ReturnsFalse
+15:12:10	情報	実行中: testGetSessionInfo_ValidSession_ReturnsUserInfo
+15:12:11	情報	✓ PASS: testGetSessionInfo_ValidSession_ReturnsUserInfo
+15:12:11	情報	実行中: testGetSessionInfo_AuthenticatedUser_ReturnsEmployeeData
+15:12:11	情報	✓ PASS: testGetSessionInfo_AuthenticatedUser_ReturnsEmployeeData
+15:12:11	情報	実行中: testGetSessionInfo_UnauthenticatedUser_ReturnsLimitedInfo
+15:12:12	情報	✓ PASS: testGetSessionInfo_UnauthenticatedUser_ReturnsLimitedInfo
+15:12:12	情報	実行中: testAuthenticationFlow_ValidUser_FullFlow
+15:12:14	情報	✓ PASS: testAuthenticationFlow_ValidUser_FullFlow
+15:12:14	情報	
+=== 認証機能テスト結果 ===
+15:12:14	情報	総テスト数: 14
+15:12:14	情報	成功: 14
+15:12:14	情報	失敗: 0
+15:12:14	情報	実行時間: 10564ms
+15:12:14	情報	成功率: 100%
+15:12:14	情報	
+🎉 全テスト通過！Greenフェーズ完了、Refactorフェーズに進むことができます。
+15:12:14	お知らせ	実行完了

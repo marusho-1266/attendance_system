@@ -1,0 +1,23 @@
+14:21:46	お知らせ	実行開始
+14:21:46	情報	引数が指定されていないため、デフォルトテストを実行: testAuthenticateUser_ValidUser_ReturnsTrue
+14:21:46	情報	=== 単体認証テスト: testAuthenticateUser_ValidUser_ReturnsTrue ===
+14:21:46	情報	authenticateUser - メール正規化: "tanaka@example.com" -> "tanaka@example.com"
+14:21:46	情報	authenticateUser - メールフォーマット検証開始: tanaka@example.com
+14:21:46	情報	authenticateUser - メールフォーマット検証成功: tanaka@example.com
+14:21:46	情報	authenticateUser - ブルートフォース攻撃チェック開始: tanaka@example.com
+14:21:46	情報	authenticateUser - ブルートフォース攻撃チェック通過: tanaka@example.com
+14:21:46	情報	authenticateUser - getEmployee呼び出し開始: tanaka@example.com
+14:21:47	情報	getEmployee - スプレッドシートデータ読み取り: 6行
+14:21:47	情報	getEmployee - 検索対象メール: tanaka@example.com
+14:21:47	情報	getEmployee - 全データ行0: ["社員ID","氏名","Gmail","所属","雇用区分","上司Gmail","基準始業","基準終業"]
+14:21:47	情報	getEmployee - 全データ行1: ["EMP001","田中太郎","tanaka@example.com","営業部","正社員","manager@example.com","1899-12-30T00:00:00.000Z","1899-12-30T09:00:00.000Z"]
+14:21:47	情報	getEmployee - 全データ行2: ["EMP002","佐藤花子","sato@example.com","開発部","正社員","dev-manager@example.com","1899-12-30T00:30:00.000Z","1899-12-30T09:30:00.000Z"]
+14:21:47	情報	getEmployee - 全データ行3: ["EMP003","鈴木次郎","suzuki@example.com","営業部","パート","manager@example.com","1899-12-30T01:00:00.000Z","1899-12-30T06:00:00.000Z"]
+14:21:47	情報	getEmployee - 全データ行4: ["EMP004","管理者太郎","manager@example.com","管理部","正社員","","1899-12-30T00:00:00.000Z","1899-12-30T09:00:00.000Z"]
+14:21:47	情報	getEmployee - 全データ行5: ["EMP005","開発管理者","dev-manager@example.com","開発部","正社員","","1899-12-30T00:00:00.000Z","1899-12-30T09:00:00.000Z"]
+14:21:47	情報	getEmployee - 行1のメール: tanaka@example.com (検索対象: tanaka@example.com)
+14:21:47	情報	getEmployee - 従業員情報見つかり: {"employeeId":"EMP001","name":"田中太郎","gmail":"tanaka@example.com","department":"営業部","employmentType":"正社員","supervisorGmail":"manager@example.com","startTime":"1899-12-30T00:00:00.000Z","endTime":"1899-12-30T09:00:00.000Z"}
+14:21:47	情報	authenticateUser - getEmployee呼び出し完了: tanaka@example.com
+14:21:47	情報	authenticateUser - 従業員検索結果: tanaka@example.com = {"employeeId":"EMP001","name":"田中太郎","gmail":"tanaka@example.com","department":"営業部","employmentType":"正社員","supervisorGmail":"manager@example.com","startTime":"1899-12-30T00:00:00.000Z","endTime":"1899-12-30T09:00:00.000Z"}
+14:21:47	情報	✓ テスト成功: testAuthenticateUser_ValidUser_ReturnsTrue
+14:21:47	お知らせ	実行完了

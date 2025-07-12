@@ -145,10 +145,10 @@ function testGetSessionInfo_AuthenticatedUser_ReturnsEmployeeData() {
   // Red: 認証済みユーザーの詳細情報が含まれることを期待
   var sessionInfo = getSessionInfo();
   
-  if (sessionInfo && sessionInfo.email) {
-    assertNotNull(sessionInfo.employeeInfo, '認証済みユーザーには従業員情報が含まれるべき');
-    assertTrue(sessionInfo.isAuthenticated, '認証状態がtrueであるべき');
-  }
+  // テスト環境でも常にチェックを実行
+  assertNotNull(sessionInfo, 'セッション情報が取得されるべき');
+  assertNotNull(sessionInfo.employeeInfo, '認証済みユーザーには従業員情報が含まれるべき');
+  assertTrue(sessionInfo.isAuthenticated, '認証状態がtrueであるべき');
 }
 
 /**

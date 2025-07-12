@@ -1,0 +1,77 @@
+14:59:21	お知らせ	実行開始
+14:59:22	情報	=== パフォーマンステスト実行 ===
+14:59:22	情報	=== GAS Test Framework - 実行開始 ===
+14:59:22	情報	✓ testDummy_Assert_True_ShouldPass - PASS
+14:59:22	情報	✓ testDummy_Assert_False_ShouldFail - PASS
+14:59:22	情報	=== Constants.gs テスト実行開始 ===
+14:59:22	情報	✓ testGetColumnIndex_Employee_Name_ReturnsCorrectIndex - PASS
+14:59:22	情報	✓ testGetColumnIndex_Employee_Gmail_ReturnsCorrectIndex - PASS
+14:59:22	情報	✓ testGetColumnIndex_Employee_EmployeeId_ReturnsCorrectIndex - PASS
+14:59:22	情報	✓ testGetColumnIndex_Holiday_Date_ReturnsCorrectIndex - PASS
+14:59:22	情報	✓ testGetColumnIndex_Holiday_Name_ReturnsCorrectIndex - PASS
+14:59:22	情報	✓ testGetColumnIndex_LogRaw_Timestamp_ReturnsCorrectIndex - PASS
+14:59:22	情報	✓ testGetColumnIndex_LogRaw_Action_ReturnsCorrectIndex - PASS
+14:59:22	情報	✓ testGetColumnIndex_InvalidSheetType_ThrowsError - PASS
+14:59:22	情報	✓ testGetSheetName_MasterEmployee_ReturnsCorrectName - PASS
+14:59:22	情報	✓ testGetSheetName_MasterHoliday_ReturnsCorrectName - PASS
+14:59:22	情報	✓ testGetSheetName_LogRaw_ReturnsCorrectName - PASS
+14:59:22	情報	✓ testGetActionConstant_ClockIn_ReturnsCorrectValue - PASS
+14:59:22	情報	✓ testGetActionConstant_ClockOut_ReturnsCorrectValue - PASS
+14:59:22	情報	✓ testGetActionConstant_BreakStart_ReturnsCorrectValue - PASS
+14:59:22	情報	✓ testGetActionConstant_BreakEnd_ReturnsCorrectValue - PASS
+14:59:22	情報	✓ testGetAppConfig_StandardWorkHours_ReturnsCorrectValue - PASS
+14:59:22	情報	✓ testGetAppConfig_MaxWorkHoursPerDay_ReturnsCorrectValue - PASS
+14:59:22	情報	✓ testGetAppConfig_BreakTimeAutoDeduct_ReturnsCorrectValue - PASS
+14:59:22	情報	=== Constants.gs テスト実行完了 ===
+14:59:22	情報	=== CommonUtils.gs テスト実行開始 ===
+14:59:22	情報	✓ testFormatDate_ValidDate_ReturnsFormattedString - PASS
+14:59:22	情報	✓ testFormatDate_InvalidDate_ThrowsError - PASS
+14:59:22	情報	✓ testFormatDate_NonDateObject_ThrowsError - PASS
+14:59:22	情報	✓ testFormatTime_ValidDateTime_ReturnsFormattedTime - PASS
+14:59:22	情報	✓ testFormatTime_MidnightTime_ReturnsCorrectFormat - PASS
+14:59:22	情報	✓ testFormatDateTime_ValidDateTime_ReturnsFormattedDateTime - PASS
+14:59:22	情報	✓ testParseDate_ValidDateString_ReturnsDateObject - PASS
+14:59:22	情報	✓ testParseDate_InvalidFormat_ThrowsError - PASS
+14:59:22	情報	✓ testParseDate_InvalidDate_ThrowsError - PASS
+14:59:22	情報	✓ testTimeStringToMinutes_ValidTime_ReturnsMinutes - PASS
+14:59:22	情報	✓ testTimeStringToMinutes_Midnight_ReturnsZero - PASS
+14:59:22	情報	✓ testTimeStringToMinutes_InvalidFormat_ThrowsError - PASS
+14:59:22	情報	✓ testMinutesToTimeString_ValidMinutes_ReturnsTimeString - PASS
+14:59:22	情報	✓ testMinutesToTimeString_Zero_ReturnsMidnight - PASS
+14:59:22	情報	✓ testMinutesToTimeString_NegativeMinutes_ThrowsError - PASS
+14:59:22	情報	✓ testIsSameDate_SameDates_ReturnsTrue - PASS
+14:59:22	情報	✓ testIsSameDate_DifferentDates_ReturnsFalse - PASS
+14:59:22	情報	✓ testIsSameDate_NullDates_ReturnsFalse - PASS
+14:59:22	情報	✓ testIsEmpty_EmptyString_ReturnsTrue - PASS
+14:59:22	情報	✓ testIsEmpty_WhitespaceString_ReturnsTrue - PASS
+14:59:22	情報	✓ testIsEmpty_ValidString_ReturnsFalse - PASS
+14:59:22	情報	✓ testIsEmpty_Null_ReturnsTrue - PASS
+14:59:22	情報	✓ testIsValidEmail_ValidEmail_ReturnsTrue - PASS
+14:59:22	情報	✓ testIsValidEmail_InvalidEmail_ReturnsFalse - PASS
+14:59:22	情報	✓ testIsValidEmail_EmptyString_ReturnsFalse - PASS
+14:59:22	情報	=== CommonUtils.gs テスト実行完了 ===
+14:59:22	情報	=== SpreadsheetManager.gs テスト実行開始 ===
+14:59:22	情報	sheetExists パラメータ検証テスト完了
+14:59:22	情報	✓ testSheetExists_ValidSheetName_ReturnsCorrectResult - PASS
+14:59:22	情報	✓ testGetOrCreateSheet_InvalidParameter_ThrowsError - PASS
+14:59:22	情報	✓ testAppendDataToSheet_InvalidParameters_ThrowsError - PASS
+14:59:22	情報	✓ testSetupEmployeeSheetHeader_InvalidParameter_ThrowsError - PASS
+14:59:22	情報	✓ testSetupHolidaySheetHeader_InvalidParameter_ThrowsError - PASS
+14:59:22	情報	✓ testSetupLogRawSheetHeader_InvalidParameter_ThrowsError - PASS
+14:59:22	情報	✓ testSetupDailySummarySheetHeader_InvalidParameter_ThrowsError - PASS
+14:59:22	情報	✓ testSetupMonthlySummarySheetHeader_InvalidParameter_ThrowsError - PASS
+14:59:22	情報	✓ testSetupRequestResponsesSheetHeader_InvalidParameter_ThrowsError - PASS
+14:59:22	情報	統合テスト: シート名の取得が正常に動作しています
+14:59:22	情報	✓ testInitializeAllSheets_Integration_WorksCorrectly - PASS
+14:59:22	情報	モックテスト: パラメータ検証が正常に動作しています
+14:59:22	情報	✓ testSpreadsheetManager_MockTest_BasicFunctionality - PASS
+14:59:22	情報	=== SpreadsheetManager.gs テスト実行完了 ===
+14:59:22	情報	
+=== テスト結果サマリー ===
+14:59:22	情報	実行テスト数: 56
+14:59:22	情報	成功: 56
+14:59:22	情報	失敗: 0
+14:59:22	情報	=== GAS Test Framework - 実行完了 ===
+14:59:22	情報	テスト実行時間: 59ms
+14:59:22	情報	✓ パフォーマンス基準クリア（30秒以内）
+14:59:22	お知らせ	実行完了

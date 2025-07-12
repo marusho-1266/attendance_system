@@ -123,7 +123,7 @@ function getEmployee(email) {
       var rowEmail = row[getColumnIndex('EMPLOYEE', 'GMAIL')]; // C列のGmail
       
       if (rowEmail === email) {
-        return {
+        var employee = {
           employeeId: row[getColumnIndex('EMPLOYEE', 'EMPLOYEE_ID')],
           name: row[getColumnIndex('EMPLOYEE', 'NAME')],
           gmail: row[getColumnIndex('EMPLOYEE', 'GMAIL')],
@@ -133,10 +133,12 @@ function getEmployee(email) {
           startTime: row[getColumnIndex('EMPLOYEE', 'START_TIME')],
           endTime: row[getColumnIndex('EMPLOYEE', 'END_TIME')]
         };
+        return employee;
       }
     }
     
     return null; // 見つからない場合
+    
   } catch (error) {
     console.log('getEmployee スプレッドシート検索エラー: ' + error.message);
     // フォールバック: テスト用固定データ
@@ -148,6 +150,26 @@ function getEmployee(email) {
         department: '営業部',
         employmentType: '正社員',
         supervisorGmail: 'manager@example.com',
+        startTime: '09:00',
+        endTime: '18:00'
+      },
+      {
+        employeeId: 'EMP004',
+        name: '管理者太郎',
+        gmail: 'manager@example.com',
+        department: '管理部',
+        employmentType: '正社員',
+        supervisorGmail: '',
+        startTime: '09:00',
+        endTime: '18:00'
+      },
+      {
+        employeeId: 'EMP005',
+        name: '開発管理者',
+        gmail: 'dev-manager@example.com',
+        department: '開発部',
+        employmentType: '正社員',
+        supervisorGmail: '',
         startTime: '09:00',
         endTime: '18:00'
       }
