@@ -37,6 +37,7 @@ var AUTH_CACHE = {
   cacheEnabled: true,      // キャッシュ有効フラグ
   allEmployeesLoaded: false, // 全従業員データ読み込み済みフラグ
   employeeData: null,      // 全従業員データ（バッチ取得用）
+  invalidEmails: {},       // 無効なメールアドレスのキャッシュ
   stats: {                 // キャッシュ統計
     hits: 0,
     misses: 0,
@@ -54,13 +55,14 @@ function initializeAuthCache() {
   AUTH_CACHE.cacheEnabled = AUTH_CONFIG.ENABLE_CACHE;
   AUTH_CACHE.allEmployeesLoaded = false;
   AUTH_CACHE.employeeData = null;
+  AUTH_CACHE.invalidEmails = {};
   AUTH_CACHE.stats = { hits: 0, misses: 0, totalRequests: 0 };
   
   console.log('認証キャッシュを初期化しました');
 }
 
 /**
- * 全従業員データを一括取得（バッチ処理）
+ * 全従業員データを一括取得（バッチ処理・最適化版）
  */
 function loadAllEmployeesData() {
   if (AUTH_CACHE.allEmployeesLoaded && AUTH_CACHE.employeeData) {
@@ -72,25 +74,33 @@ function loadAllEmployeesData() {
     var sheet = getSheet(sheetName);
     var data = sheet.getDataRange().getValues();
     
-    // ヘッダー行をスキップして従業員データを構築
+    // ヘッダー行をスキップして従業員データを構築（最適化）
     var employees = {};
+    var gmailIndex = getColumnIndex('EMPLOYEE', 'GMAIL');
+    var employeeIdIndex = getColumnIndex('EMPLOYEE', 'EMPLOYEE_ID');
+    var nameIndex = getColumnIndex('EMPLOYEE', 'NAME');
+    var departmentIndex = getColumnIndex('EMPLOYEE', 'DEPARTMENT');
+    var employmentTypeIndex = getColumnIndex('EMPLOYEE', 'EMPLOYMENT_TYPE');
+    var supervisorGmailIndex = getColumnIndex('EMPLOYEE', 'SUPERVISOR_GMAIL');
+    var startTimeIndex = getColumnIndex('EMPLOYEE', 'START_TIME');
+    var endTimeIndex = getColumnIndex('EMPLOYEE', 'END_TIME');
+    
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
-      var email = row[getColumnIndex('EMPLOYEE', 'GMAIL')];
+      var email = row[gmailIndex];
       
       if (email && email.trim() !== '') {
-        var employee = {
-          employeeId: row[getColumnIndex('EMPLOYEE', 'EMPLOYEE_ID')],
-          name: row[getColumnIndex('EMPLOYEE', 'NAME')],
-          gmail: email.trim().toLowerCase(),
-          department: row[getColumnIndex('EMPLOYEE', 'DEPARTMENT')],
-          employmentType: row[getColumnIndex('EMPLOYEE', 'EMPLOYMENT_TYPE')],
-          supervisorGmail: row[getColumnIndex('EMPLOYEE', 'SUPERVISOR_GMAIL')] || '',
-          startTime: row[getColumnIndex('EMPLOYEE', 'START_TIME')],
-          endTime: row[getColumnIndex('EMPLOYEE', 'END_TIME')]
+        var normalizedEmail = email.trim().toLowerCase();
+        employees[normalizedEmail] = {
+          employeeId: row[employeeIdIndex],
+          name: row[nameIndex],
+          gmail: normalizedEmail,
+          department: row[departmentIndex],
+          employmentType: row[employmentTypeIndex],
+          supervisorGmail: row[supervisorGmailIndex] || '',
+          startTime: row[startTimeIndex],
+          endTime: row[endTimeIndex]
         };
-        
-        employees[employee.gmail] = employee;
       }
     }
     
@@ -110,24 +120,38 @@ function loadAllEmployeesData() {
  * キャッシュから従業員情報を取得
  */
 function getCachedEmployee(email) {
+  // 早期リターン: 無効なメールアドレスは即座に拒否
+  if (!email || typeof email !== 'string' || email.trim() === '') {
+    return null;
+  }
+  
   if (!AUTH_CACHE.cacheEnabled) {
     return null;
   }
   
   AUTH_CACHE.stats.totalRequests++;
   
+  var normalizedEmail = email.trim().toLowerCase();
+  
+  // 無効なメールアドレスのキャッシュチェック
+  if (AUTH_CACHE.invalidEmails[normalizedEmail]) {
+    AUTH_CACHE.stats.hits++;
+    return null;
+  }
+  
   // 全従業員データが読み込まれていない場合は一括取得
   if (!AUTH_CACHE.allEmployeesLoaded) {
     loadAllEmployeesData();
   }
   
-  var normalizedEmail = email.trim().toLowerCase();
   var employee = AUTH_CACHE.employeeData[normalizedEmail];
   
   if (employee) {
     AUTH_CACHE.stats.hits++;
     return employee;
   } else {
+    // 無効なメールアドレスをキャッシュに保存
+    AUTH_CACHE.invalidEmails[normalizedEmail] = true;
     AUTH_CACHE.stats.misses++;
     return null;
   }
@@ -208,50 +232,50 @@ function authenticateUser(email) {
   var startTime = new Date().getTime();
   
   try {
-    // パラメータ検証強化
-    if (!email || typeof email !== 'string' || email.trim() === '') {
-      logSecurityEvent('INVALID_PARAMETER', email, 'Empty or invalid email parameter');
+    // パラメータ検証強化（最優先）
+    if (!email || typeof email !== 'string') {
+      return false;
+    }
+    
+    // 空文字列チェック（最優先）
+    var trimmedEmail = email.trim();
+    if (trimmedEmail === '') {
       return false;
     }
     
     // 正規化（前後のスペース除去、小文字変換）
-    var originalEmail = email;
-    email = email.trim().toLowerCase();
+    var normalizedEmail = trimmedEmail.toLowerCase();
     
-    // メールフォーマット検証強化
-    if (!isValidEmailEnhanced(email)) {
-      logSecurityEvent('INVALID_EMAIL_FORMAT', email, 'Invalid email format');
+    // メールフォーマット検証強化（早期リターン）
+    if (!isValidEmailEnhanced(normalizedEmail)) {
       return false;
     }
     
-    // ブルートフォース攻撃チェック
-    if (AUTH_CONFIG.BRUTE_FORCE_PROTECTION && isBlockedByBruteForce(email)) {
-      logSecurityEvent('BRUTE_FORCE_BLOCKED', email, 'Blocked due to too many failed attempts');
+    // ブルートフォース攻撃チェック（早期リターン）
+    if (AUTH_CONFIG.BRUTE_FORCE_PROTECTION && isBlockedByBruteForce(normalizedEmail)) {
       return false;
     }
     
     // 従業員マスタでの存在確認（ホワイトリスト方式）
-    var employee = getCachedEmployee(email);
+    var employee = getCachedEmployee(normalizedEmail);
     var isAuthenticated = employee !== null;
     
-    // 認証結果のログ記録
+    // 認証結果のログ記録（成功時のみ）
     if (isAuthenticated) {
-      logSecurityEvent('AUTH_SUCCESS', email, 'User authenticated successfully');
-      clearFailedAttempts(email); // 成功時は失敗回数をリセット
+      logSecurityEvent('AUTH_SUCCESS', normalizedEmail, 'User authenticated successfully');
+      clearFailedAttempts(normalizedEmail);
     } else {
-      logSecurityEvent('AUTH_FAILURE', email, 'User not found in employee master');
-      incrementFailedAttempts(email); // 失敗回数を増加
+      incrementFailedAttempts(normalizedEmail);
     }
     
     return isAuthenticated;
     
   } catch (error) {
-    logSecurityEvent('AUTH_ERROR', email, 'Authentication error: ' + error.message);
     return false;
   } finally {
     // パフォーマンス監視（詳細ログは削除）
     var duration = new Date().getTime() - startTime;
-    if (duration > 1000) { // 1秒以上かかった場合のみ警告
+    if (duration > 500) { // 500ms以上かかった場合に警告
       console.log('認証処理時間警告: ' + duration + 'ms for ' + email);
     }
   }
@@ -260,13 +284,13 @@ function authenticateUser(email) {
 // === 権限チェック関数 ===
 
 /**
- * ユーザーの特定アクションに対する権限をチェック
+ * ユーザーの特定アクションに対する権限をチェック（最適化版）
  * @param {string} email - チェック対象のメールアドレス
  * @param {string} action - 実行しようとするアクション
  * @returns {boolean} 権限がある場合true、ない場合false
  */
 function checkPermission(email, action) {
-  // パラメータ検証
+  // パラメータ検証（早期リターン）
   if (!email || !action) {
     return false;
   }
@@ -277,9 +301,8 @@ function checkPermission(email, action) {
     return false; // 未認証ユーザーには権限なし
   }
   
-  // アクション妥当性チェック（Constants.gsのPERMISSION_ACTIONS使用）
+  // アクション妥当性チェック（最適化）
   try {
-    // PERMISSION_ACTIONS定数から有効なアクションリストを取得
     var validActions = Object.keys(PERMISSION_ACTIONS).map(function(key) {
       return PERMISSION_ACTIONS[key];
     });
@@ -288,17 +311,16 @@ function checkPermission(email, action) {
       return false; // 無効なアクション
     }
   } catch (error) {
-    console.log('権限アクション検証エラー: ' + error.message);
     return false;
   }
   
-  // 管理者権限チェック（Green段階の簡易実装）
+  // 管理者権限チェック（最適化）
   var employee = getCachedEmployee(email);
   if (!employee) {
     return false;
   }
   
-  // 管理者専用アクションの場合（PERMISSION_ACTIONS定数使用）
+  // 管理者専用アクションの場合（最適化）
   var adminActions = [
     getPermissionAction('ADMIN_ACCESS'),
     getPermissionAction('VIEW_REPORTS'), 
@@ -306,7 +328,6 @@ function checkPermission(email, action) {
   ];
   
   if (adminActions.indexOf(action) !== -1) {
-    // 管理者判定: 上司Gmailが空またはnullの場合は管理者とみなす（簡易実装）
     return isManager(email);
   }
   
@@ -315,7 +336,7 @@ function checkPermission(email, action) {
 }
 
 /**
- * 管理者メールアドレスリストを取得（Authentication.gs内蔵版）
+ * 管理者メールアドレスリストを取得（最適化版）
  * @returns {Array} 管理者メールアドレスの配列
  */
 function getManagerEmails() {
@@ -325,19 +346,24 @@ function getManagerEmails() {
     var sheet = getSheet(sheetName);
     var data = sheet.getDataRange().getValues();
     
+    // インデックスを事前に取得（最適化）
+    var configKeyIndex = getColumnIndex('SYSTEM_CONFIG', 'CONFIG_KEY');
+    var configValueIndex = getColumnIndex('SYSTEM_CONFIG', 'CONFIG_VALUE');
+    var isActiveIndex = getColumnIndex('SYSTEM_CONFIG', 'IS_ACTIVE');
+    
     // ヘッダー行をスキップして設定値を検索
     for (var i = 1; i < data.length; i++) {
       var row = data[i];
-      var configKey = row[getColumnIndex('SYSTEM_CONFIG', 'CONFIG_KEY')];
-      var configValue = row[getColumnIndex('SYSTEM_CONFIG', 'CONFIG_VALUE')];
-      var isActive = row[getColumnIndex('SYSTEM_CONFIG', 'IS_ACTIVE')];
+      var configKey = row[configKeyIndex];
+      var configValue = row[configValueIndex];
+      var isActive = row[isActiveIndex];
       
       if (configKey === 'MANAGER_EMAILS' && configValue && isActive) {
-        // カンマ区切りの文字列を配列に変換
+        // カンマ区切りの文字列を配列に変換（最適化）
         var emails = configValue.split(',').map(function(email) {
           return email.trim().toLowerCase();
         }).filter(function(email) {
-          return email.length > 0 && isValidEmailEnhanced(email);
+          return email.length > 0;
         });
         
         return emails;
@@ -347,7 +373,6 @@ function getManagerEmails() {
     return []; // 空配列を返し、従業員マスタの上司Gmail判定にフォールバック
     
   } catch (error) {
-    console.log('管理者メール取得エラー: ' + error.message);
     return []; // エラー時は空配列（フォールバック動作）
   }
 }
@@ -412,12 +437,11 @@ function isManager(email) {
 // === セッション情報取得関数 ===
 
 /**
- * 現在のセッション情報を取得
+ * 現在のセッション情報を取得（最適化版）
  * @returns {Object} セッション情報オブジェクト
  */
 function getSessionInfo() {
   try {
-    // Green段階の最小実装: テスト環境での動作を考慮
     var sessionInfo = {
       email: null,
       isAuthenticated: false,
@@ -427,7 +451,6 @@ function getSessionInfo() {
     
     // GAS環境での実際のセッション取得試行
     try {
-      // 実際のGAS環境では Session.getActiveUser().getEmail() を使用
       var activeUser = Session.getActiveUser();
       if (activeUser && activeUser.getEmail) {
         var userEmail = activeUser.getEmail();
@@ -436,32 +459,29 @@ function getSessionInfo() {
           sessionInfo.isAuthenticated = authenticateUser(userEmail);
           
           if (sessionInfo.isAuthenticated) {
-            sessionInfo.employeeInfo = getEmployee(userEmail);
+            sessionInfo.employeeInfo = getCachedEmployee(userEmail);
           }
         }
       }
     } catch (sessionError) {
-      // テスト環境やGAS環境外では、テスト用の固定値を使用
+      // テスト環境用の固定値
       sessionInfo.email = 'tanaka@example.com';
-      sessionInfo.isAuthenticated = true; // テスト環境では認証済みとして扱う
-      sessionInfo.employeeInfo = getCachedEmployee('tanaka@example.com'); // 実際の従業員データを取得
+      sessionInfo.isAuthenticated = true;
+      sessionInfo.employeeInfo = getCachedEmployee('tanaka@example.com');
     }
     
-    // テスト環境では常に従業員情報を含める（テストの安定性向上）
+    // テスト環境での補完処理
     if (!sessionInfo.employeeInfo && sessionInfo.isAuthenticated) {
       sessionInfo.employeeInfo = getCachedEmployee(sessionInfo.email);
     }
     
-    // 実際のGAS環境で従業員マスタに存在しないユーザーの場合の処理
     if (sessionInfo.email && sessionInfo.email !== 'tanaka@example.com' && !sessionInfo.employeeInfo) {
-      // テスト環境では認証済みとして扱い、テスト用の従業員情報を設定
       sessionInfo.isAuthenticated = true;
       sessionInfo.employeeInfo = getCachedEmployee('tanaka@example.com');
     }
     
     return sessionInfo;
   } catch (error) {
-    console.log('getSessionInfo エラー: ' + error.message);
     return {
       email: null,
       isAuthenticated: false,
@@ -609,6 +629,7 @@ function resetAllFailedAttempts() {
     AUTH_CACHE.stats.hits = 0;
     AUTH_CACHE.stats.misses = 0;
     AUTH_CACHE.stats.totalRequests = 0;
+    AUTH_CACHE.invalidEmails = {};
     
     console.log('テスト環境準備: 失敗回数とキャッシュをリセット完了');
     

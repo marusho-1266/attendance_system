@@ -1,0 +1,335 @@
+    0:04:41	お知らせ	実行開始
+0:04:41	情報	⚡ Triggers.gs クイックテスト開始
+0:04:41	情報	------------------------------
+0:04:41	情報	⚡ testOnOpen_SpreadsheetOpen_AddsManagementMenu
+0:04:41	情報	onOpen: 管理メニュー追加処理開始
+0:04:41	情報	✓ onOpen: 管理メニュー追加完了
+0:04:41	情報	✓ onOpen関数の実行確認完了
+0:04:41	情報	✅ PASS
+0:04:41	情報	⚡ testDailyJob_ExecuteDaily_UpdatesDailySummary
+0:04:41	情報	dailyJob: 日次処理開始
+0:04:41	情報	Daily_Summary更新処理開始
+0:04:41	情報	対象日: 2025-07-14
+0:04:47	情報	従業員数: 5
+0:04:47	情報	対象従業員数: 0
+0:04:47	情報	Daily_Summary更新完了: 0件
+0:04:47	情報	✓ Daily_Summary更新完了: 0件
+0:04:47	情報	未退勤者チェック処理開始
+0:04:47	情報	未退勤者チェック対象日: 2025-07-14
+0:04:48	情報	アクティブ従業員数: 5
+0:04:51	情報	未退勤者数: 0
+0:04:51	情報	未退勤者なし
+0:04:51	情報	✓ 未退勤者チェック完了: 0件
+0:04:51	情報	✓ dailyJob: 処理完了（実行時間: 10104ms）
+0:04:51	情報	✓ dailyJob実行時間確認: 10111ms
+0:04:51	情報	✅ PASS
+0:04:51	情報	⚡ testWeeklyOvertimeJob_Monday_CalculatesOvertimeHours
+0:04:51	情報	weeklyOvertimeJob: 週次残業処理開始
+0:04:51	情報	週次残業集計処理開始
+0:04:51	情報	集計期間: 2025-06-17 〜 2025-07-15
+0:04:52	情報	対象従業員数: 5
+0:04:53	情報	週次残業集計完了: 5名
+0:04:53	情報	✓ 残業集計完了: 5名分
+0:04:53	情報	✓ 残業超過者なし
+0:04:53	情報	✓ weeklyOvertimeJob: 処理完了（実行時間: 1454ms）
+0:04:53	情報	✓ 週次残業集計実行確認
+0:04:53	情報	✅ PASS
+0:04:53	情報	⚡ testMonthlyJob_FirstDayOfMonth_UpdatesMonthlySummary
+0:04:53	情報	monthlyJob: 月次処理開始
+0:04:53	情報	Monthly_Summary更新処理（簡易実装）
+0:04:53	情報	✓ Monthly_Summary更新完了: 17件
+0:04:53	情報	CSV出力処理（モック）: monthly_report_2025-07.csv
+0:04:53	情報	✓ CSV出力完了: monthly_report_2025-07.csv
+0:04:53	情報	月次レポートメール送信（モック）: monthly_report_2025-07.csv
+0:04:53	情報	✓ 月次レポートメール送信完了
+0:04:53	情報	✓ monthlyJob: 処理完了（実行時間: 8ms）
+0:04:53	情報	✓ 月次集計処理実行確認
+0:04:53	情報	✅ PASS
+0:04:53	情報	------------------------------
+0:04:53	情報	⚡ クイックテスト完了: 4/4 (11792ms)
+0:04:53	情報	🏁 Triggers.gs 最終テスト開始
+0:04:53	情報	============================================================
+0:04:53	情報	1️⃣ メインテスト実行中...
+0:04:53	情報	🚀 Triggers.gs メインテスト開始
+0:04:53	情報	==================================================
+0:04:53	情報	=== Triggers.gs 詳細テスト実行開始 ===
+0:04:53	情報	実行予定テスト数: 12
+0:04:53	情報	実行中: testOnOpen_SpreadsheetOpen_AddsManagementMenu
+0:04:53	情報	onOpen: 管理メニュー追加処理開始
+0:04:53	情報	✓ onOpen: 管理メニュー追加完了
+0:04:53	情報	✓ onOpen関数の実行確認完了
+0:04:53	情報	✓ PASS: testOnOpen_SpreadsheetOpen_AddsManagementMenu
+0:04:53	情報	実行中: testOnOpen_ErrorHandling_DoesNotThrow
+0:04:53	情報	onOpen: 管理メニュー追加処理開始
+0:04:53	情報	✓ onOpen: 管理メニュー追加完了
+0:04:53	情報	✓ PASS: testOnOpen_ErrorHandling_DoesNotThrow
+0:04:53	情報	実行中: testDailyJob_ExecuteDaily_UpdatesDailySummary
+0:04:53	情報	dailyJob: 日次処理開始
+0:04:53	情報	Daily_Summary更新処理開始
+0:04:53	情報	対象日: 2025-07-14
+0:04:55	情報	従業員数: 5
+0:04:55	情報	対象従業員数: 0
+0:04:56	情報	Daily_Summary更新完了: 0件
+0:04:56	情報	✓ Daily_Summary更新完了: 0件
+0:04:56	情報	未退勤者チェック処理開始
+0:04:56	情報	未退勤者チェック対象日: 2025-07-14
+0:04:58	情報	アクティブ従業員数: 5
+0:05:00	情報	未退勤者数: 0
+0:05:00	情報	未退勤者なし
+0:05:00	情報	✓ 未退勤者チェック完了: 0件
+0:05:00	情報	✓ dailyJob: 処理完了（実行時間: 7126ms）
+0:05:00	情報	✓ dailyJob実行時間確認: 7128ms
+0:05:00	情報	✓ PASS: testDailyJob_ExecuteDaily_UpdatesDailySummary
+0:05:00	情報	実行中: testDailyJob_HasUnfinishedClockOut_SendsEmail
+0:05:00	情報	dailyJob: 日次処理開始
+0:05:00	情報	Daily_Summary更新処理開始
+0:05:00	情報	対象日: 2025-07-14
+0:05:03	情報	従業員数: 5
+0:05:03	情報	対象従業員数: 0
+0:05:04	情報	Daily_Summary更新完了: 0件
+0:05:04	情報	✓ Daily_Summary更新完了: 0件
+0:05:04	情報	未退勤者チェック処理開始
+0:05:04	情報	未退勤者チェック対象日: 2025-07-14
+0:05:04	情報	アクティブ従業員数: 5
+0:05:05	情報	未退勤者数: 0
+0:05:05	情報	未退勤者なし
+0:05:05	情報	✓ 未退勤者チェック完了: 0件
+0:05:05	情報	✓ dailyJob: 処理完了（実行時間: 4800ms）
+0:05:05	情報	✓ dailyJob未退勤者チェック実行確認
+0:05:05	情報	✓ PASS: testDailyJob_HasUnfinishedClockOut_SendsEmail
+0:05:05	情報	実行中: testDailyJob_QuotaCompliance_StaysWithinLimits
+0:05:05	情報	dailyJob: 日次処理開始
+0:05:05	情報	Daily_Summary更新処理開始
+0:05:05	情報	対象日: 2025-07-14
+0:05:06	情報	従業員数: 5
+0:05:06	情報	対象従業員数: 0
+0:05:07	情報	Daily_Summary更新完了: 0件
+0:05:07	情報	✓ Daily_Summary更新完了: 0件
+0:05:07	情報	未退勤者チェック処理開始
+0:05:07	情報	未退勤者チェック対象日: 2025-07-14
+0:05:09	情報	アクティブ従業員数: 5
+0:05:10	情報	未退勤者数: 0
+0:05:10	情報	未退勤者なし
+0:05:10	情報	✓ 未退勤者チェック完了: 0件
+0:05:10	情報	✓ dailyJob: 処理完了（実行時間: 4714ms）
+0:05:10	情報	✓ dailyJobクォータ制限確認: 4716ms
+0:05:10	情報	✓ PASS: testDailyJob_QuotaCompliance_StaysWithinLimits
+0:05:10	情報	実行中: testWeeklyOvertimeJob_Monday_CalculatesOvertimeHours
+0:05:10	情報	weeklyOvertimeJob: 週次残業処理開始
+0:05:10	情報	週次残業集計処理開始
+0:05:10	情報	集計期間: 2025-06-17 〜 2025-07-15
+0:05:12	情報	対象従業員数: 5
+0:05:12	情報	週次残業集計完了: 5名
+0:05:12	情報	✓ 残業集計完了: 5名分
+0:05:12	情報	✓ 残業超過者なし
+0:05:12	情報	✓ weeklyOvertimeJob: 処理完了（実行時間: 2555ms）
+0:05:12	情報	✓ 週次残業集計実行確認
+0:05:12	情報	✓ PASS: testWeeklyOvertimeJob_Monday_CalculatesOvertimeHours
+0:05:12	情報	実行中: testWeeklyOvertimeJob_HighOvertimeDetected_SendsWarningEmail
+0:05:12	情報	weeklyOvertimeJob: 週次残業処理開始
+0:05:12	情報	週次残業集計処理開始
+0:05:12	情報	集計期間: 2025-06-17 〜 2025-07-15
+0:05:13	情報	対象従業員数: 5
+0:05:13	情報	週次残業集計完了: 5名
+0:05:13	情報	✓ 残業集計完了: 5名分
+0:05:13	情報	✓ 残業超過者なし
+0:05:13	情報	✓ weeklyOvertimeJob: 処理完了（実行時間: 736ms）
+0:05:13	情報	✓ 週次残業警告処理実行確認
+0:05:13	情報	✓ PASS: testWeeklyOvertimeJob_HighOvertimeDetected_SendsWarningEmail
+0:05:13	情報	実行中: testMonthlyJob_FirstDayOfMonth_UpdatesMonthlySummary
+0:05:13	情報	monthlyJob: 月次処理開始
+0:05:13	情報	Monthly_Summary更新処理（簡易実装）
+0:05:13	情報	✓ Monthly_Summary更新完了: 15件
+0:05:13	情報	CSV出力処理（モック）: monthly_report_2025-07.csv
+0:05:13	情報	✓ CSV出力完了: monthly_report_2025-07.csv
+0:05:13	情報	月次レポートメール送信（モック）: monthly_report_2025-07.csv
+0:05:13	情報	✓ 月次レポートメール送信完了
+0:05:13	情報	✓ monthlyJob: 処理完了（実行時間: 6ms）
+0:05:13	情報	✓ 月次集計処理実行確認
+0:05:13	情報	✓ PASS: testMonthlyJob_FirstDayOfMonth_UpdatesMonthlySummary
+0:05:13	情報	実行中: testMonthlyJob_MonthlyProcess_ExportsCSVToDrive
+0:05:13	情報	monthlyJob: 月次処理開始
+0:05:13	情報	Monthly_Summary更新処理（簡易実装）
+0:05:13	情報	✓ Monthly_Summary更新完了: 18件
+0:05:13	情報	CSV出力処理（モック）: monthly_report_2025-07.csv
+0:05:13	情報	✓ CSV出力完了: monthly_report_2025-07.csv
+0:05:13	情報	月次レポートメール送信（モック）: monthly_report_2025-07.csv
+0:05:13	情報	✓ 月次レポートメール送信完了
+0:05:13	情報	✓ monthlyJob: 処理完了（実行時間: 5ms）
+0:05:13	情報	✓ 月次CSV出力処理実行確認
+0:05:13	情報	✓ PASS: testMonthlyJob_MonthlyProcess_ExportsCSVToDrive
+0:05:13	情報	実行中: testMonthlyJob_CSVGenerated_SendsLinkEmail
+0:05:13	情報	monthlyJob: 月次処理開始
+0:05:13	情報	Monthly_Summary更新処理（簡易実装）
+0:05:13	情報	✓ Monthly_Summary更新完了: 15件
+0:05:13	情報	CSV出力処理（モック）: monthly_report_2025-07.csv
+0:05:13	情報	✓ CSV出力完了: monthly_report_2025-07.csv
+0:05:13	情報	月次レポートメール送信（モック）: monthly_report_2025-07.csv
+0:05:13	情報	✓ 月次レポートメール送信完了
+0:05:13	情報	✓ monthlyJob: 処理完了（実行時間: 5ms）
+0:05:13	情報	✓ 月次リンクメール処理実行確認
+0:05:13	情報	✓ PASS: testMonthlyJob_CSVGenerated_SendsLinkEmail
+0:05:13	情報	実行中: testTriggerIntegration_AllFunctions_ExecuteSuccessfully
+0:05:13	情報	onOpen: 管理メニュー追加処理開始
+0:05:13	情報	✓ onOpen: 管理メニュー追加完了
+0:05:13	情報	✓ onOpen統合テスト成功
+0:05:13	情報	dailyJob: 日次処理開始
+0:05:13	情報	Daily_Summary更新処理開始
+0:05:13	情報	対象日: 2025-07-14
+0:05:14	情報	従業員数: 5
+0:05:14	情報	対象従業員数: 0
+0:05:15	情報	Daily_Summary更新完了: 0件
+0:05:15	情報	✓ Daily_Summary更新完了: 0件
+0:05:15	情報	未退勤者チェック処理開始
+0:05:15	情報	未退勤者チェック対象日: 2025-07-14
+0:05:16	情報	アクティブ従業員数: 5
+0:05:17	情報	未退勤者数: 0
+0:05:17	情報	未退勤者なし
+0:05:17	情報	✓ 未退勤者チェック完了: 0件
+0:05:17	情報	✓ dailyJob: 処理完了（実行時間: 3845ms）
+0:05:17	情報	✓ dailyJob統合テスト成功
+0:05:17	情報	weeklyOvertimeJob: 週次残業処理開始
+0:05:17	情報	週次残業集計処理開始
+0:05:17	情報	集計期間: 2025-06-17 〜 2025-07-15
+0:05:17	情報	対象従業員数: 5
+0:05:18	情報	週次残業集計完了: 5名
+0:05:18	情報	✓ 残業集計完了: 5名分
+0:05:18	情報	✓ 残業超過者なし
+0:05:18	情報	✓ weeklyOvertimeJob: 処理完了（実行時間: 894ms）
+0:05:18	情報	✓ weeklyOvertimeJob統合テスト成功
+0:05:18	情報	monthlyJob: 月次処理開始
+0:05:18	情報	Monthly_Summary更新処理（簡易実装）
+0:05:18	情報	✓ Monthly_Summary更新完了: 23件
+0:05:18	情報	CSV出力処理（モック）: monthly_report_2025-07.csv
+0:05:18	情報	✓ CSV出力完了: monthly_report_2025-07.csv
+0:05:18	情報	月次レポートメール送信（モック）: monthly_report_2025-07.csv
+0:05:18	情報	✓ 月次レポートメール送信完了
+0:05:18	情報	✓ monthlyJob: 処理完了（実行時間: 5ms）
+0:05:18	情報	✓ monthlyJob統合テスト成功
+0:05:18	情報	✓ トリガー統合テスト完了: {"onOpen":true,"dailyJob":true,"weeklyOvertimeJob":true,"monthlyJob":true}
+0:05:18	情報	✓ PASS: testTriggerIntegration_AllFunctions_ExecuteSuccessfully
+0:05:18	情報	実行中: testTriggerErrorHandling_ExceptionOccurs_SystemContinues
+0:05:18	情報	onOpen: 管理メニュー追加処理開始
+0:05:18	情報	✓ onOpen: 管理メニュー追加完了
+0:05:18	情報	✓ トリガーエラーハンドリング確認完了（エラー数: 0）
+0:05:18	情報	✓ PASS: testTriggerErrorHandling_ExceptionOccurs_SystemContinues
+0:05:18	情報	
+==================================================
+0:05:18	情報	📊 Triggers.gs テスト結果サマリー
+0:05:18	情報	==================================================
+0:05:18	情報	📈 総テスト数: 12
+0:05:18	情報	✅ 成功: 12
+0:05:18	情報	❌ 失敗: 0
+0:05:18	情報	⏱️  実行時間: 25287ms
+0:05:18	情報	📊 成功率: 100%
+0:05:18	情報	
+🎉 全テスト成功！
+0:05:18	情報	📝 TDD次ステップ: Refactorフェーズ（バッチ処理の詳細実装）
+0:05:18	情報	
+2️⃣ 統合テスト実行中...
+0:05:18	情報	🔗 Triggers.gs 統合テスト開始
+0:05:18	情報	------------------------------
+0:05:18	情報	🔗 onOpen実行→メニュー確認
+0:05:18	情報	onOpen: 管理メニュー追加処理開始
+0:05:18	情報	✓ onOpen: 管理メニュー追加完了
+0:05:18	情報	✅ PASS
+0:05:18	情報	🔗 dailyJob実行→結果確認
+0:05:18	情報	dailyJob: 日次処理開始
+0:05:18	情報	Daily_Summary更新処理開始
+0:05:18	情報	対象日: 2025-07-14
+0:05:19	情報	従業員数: 5
+0:05:19	情報	対象従業員数: 0
+0:05:20	情報	Daily_Summary更新完了: 0件
+0:05:20	情報	✓ Daily_Summary更新完了: 0件
+0:05:20	情報	未退勤者チェック処理開始
+0:05:20	情報	未退勤者チェック対象日: 2025-07-14
+0:05:20	情報	アクティブ従業員数: 5
+0:05:21	情報	未退勤者数: 0
+0:05:21	情報	未退勤者なし
+0:05:21	情報	✓ 未退勤者チェック完了: 0件
+0:05:21	情報	✓ dailyJob: 処理完了（実行時間: 2749ms）
+0:05:21	情報	✅ PASS
+0:05:21	情報	🔗 weeklyOvertimeJob実行→残業チェック
+0:05:21	情報	weeklyOvertimeJob: 週次残業処理開始
+0:05:21	情報	週次残業集計処理開始
+0:05:21	情報	集計期間: 2025-06-17 〜 2025-07-15
+0:05:21	情報	対象従業員数: 5
+0:05:22	情報	週次残業集計完了: 5名
+0:05:22	情報	✓ 残業集計完了: 5名分
+0:05:22	情報	✓ 残業超過者なし
+0:05:22	情報	✓ weeklyOvertimeJob: 処理完了（実行時間: 827ms）
+0:05:22	情報	✅ PASS
+0:05:22	情報	🔗 monthlyJob実行→CSV出力確認
+0:05:22	情報	monthlyJob: 月次処理開始
+0:05:22	情報	Monthly_Summary更新処理（簡易実装）
+0:05:22	情報	✓ Monthly_Summary更新完了: 15件
+0:05:22	情報	CSV出力処理（モック）: monthly_report_2025-07.csv
+0:05:22	情報	✓ CSV出力完了: monthly_report_2025-07.csv
+0:05:22	情報	月次レポートメール送信（モック）: monthly_report_2025-07.csv
+0:05:22	情報	✓ 月次レポートメール送信完了
+0:05:22	情報	✓ monthlyJob: 処理完了（実行時間: 9ms）
+0:05:22	情報	✅ PASS
+0:05:22	情報	------------------------------
+0:05:22	情報	🔗 統合テスト完了: 4/4 (3730ms)
+0:05:22	情報	
+3️⃣ パフォーマンステスト実行中...
+0:05:22	情報	⚡ Triggers.gs パフォーマンステスト開始
+0:05:22	情報	------------------------------
+0:05:22	情報	⚡ dailyJob実行時間測定
+0:05:22	情報	dailyJob: 日次処理開始
+0:05:22	情報	Daily_Summary更新処理開始
+0:05:22	情報	対象日: 2025-07-14
+0:05:23	情報	従業員数: 5
+0:05:23	情報	対象従業員数: 0
+0:05:24	情報	Daily_Summary更新完了: 0件
+0:05:24	情報	✓ Daily_Summary更新完了: 0件
+0:05:24	情報	未退勤者チェック処理開始
+0:05:24	情報	未退勤者チェック対象日: 2025-07-14
+0:05:25	情報	アクティブ従業員数: 5
+0:05:27	情報	未退勤者数: 0
+0:05:27	情報	未退勤者なし
+0:05:27	情報	✓ 未退勤者チェック完了: 0件
+0:05:27	情報	✓ dailyJob: 処理完了（実行時間: 5073ms）
+0:05:27	情報	✅ PASS: 5075ms (目標: 60000ms)
+0:05:27	情報	⚡ weeklyOvertimeJob実行時間測定
+0:05:27	情報	weeklyOvertimeJob: 週次残業処理開始
+0:05:27	情報	週次残業集計処理開始
+0:05:27	情報	集計期間: 2025-06-17 〜 2025-07-15
+0:05:29	情報	対象従業員数: 5
+0:05:29	情報	週次残業集計完了: 5名
+0:05:29	情報	✓ 残業集計完了: 5名分
+0:05:29	情報	✓ 残業超過者なし
+0:05:29	情報	✓ weeklyOvertimeJob: 処理完了（実行時間: 2463ms）
+0:05:29	情報	✅ PASS: 2466ms (目標: 120000ms)
+0:05:29	情報	⚡ monthlyJob実行時間測定
+0:05:29	情報	monthlyJob: 月次処理開始
+0:05:29	情報	Monthly_Summary更新処理（簡易実装）
+0:05:29	情報	✓ Monthly_Summary更新完了: 32件
+0:05:29	情報	CSV出力処理（モック）: monthly_report_2025-07.csv
+0:05:29	情報	✓ CSV出力完了: monthly_report_2025-07.csv
+0:05:29	情報	月次レポートメール送信（モック）: monthly_report_2025-07.csv
+0:05:29	情報	✓ 月次レポートメール送信完了
+0:05:29	情報	✓ monthlyJob: 処理完了（実行時間: 8ms）
+0:05:29	情報	✅ PASS: 12ms (目標: 300000ms)
+0:05:29	情報	
+📊 パフォーマンス結果:
+0:05:29	情報	  dailyJob: 5075ms
+0:05:29	情報	  weeklyOvertimeJob: 2466ms
+0:05:29	情報	  monthlyJob: 12ms
+0:05:29	情報	
+============================================================
+0:05:29	情報	🏆 Triggers.gs 最終テスト結果
+0:05:29	情報	============================================================
+0:05:29	情報	✅ メインテスト: 12/12
+0:05:29	情報	✅ 統合テスト: 4/4
+0:05:29	情報	✅ パフォーマンステスト: 3/3
+0:05:29	情報	
+📊 総合結果:
+0:05:29	情報	📈 総テスト数: 19
+0:05:29	情報	✅ 成功: 19
+0:05:29	情報	❌ 失敗: 0
+0:05:29	情報	📊 成功率: 100%
+0:05:29	情報	
+🎉 フェーズ3 triggers-1 TDD実装完了！
+0:05:29	情報	📝 次のマイルストーン: フェーズ3-form-1（フォーム連携）実装
+0:05:30	お知らせ	実行完了
