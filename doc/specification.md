@@ -236,3 +236,60 @@
 3. **スクリプト所有者を共用 Gmail に固定して運用リスクを最小化**
 
 これにより、Google Workspace を利用せずとも、効率的で安全な出勤管理システムを構築できます。
+
+## GAS関数リスト自動抽出・カバレッジ半自動化運用例
+
+### 1. 関数リスト自動抽出用Node.jsスクリプト例
+```js
+// extract-functions.js
+const fs = require('fs');
+const path = require('path');
+
+const targetFiles = [
+  'src/BusinessLogic.gs',
+  'src/Authentication.gs',
+  'src/WebApp.gs',
+  'src/Triggers.gs',
+  'src/FormManager.gs',
+  'src/MailManager.gs',
+];
+
+targetFiles.forEach(file => {
+  const content = fs.readFileSync(file, 'utf8');
+  const matches = [...content.matchAll(/^function\s+([a-zA-Z0-9_]+)/gm)];
+  const functions = matches.map(m => m[1]);
+  console.log(`${path.basename(file)}: [${functions.map(f => `'${f}'`).join(', ')}]`);
+});
+```
+
+### 2. テスト済み関数リスト抽出例
+```js
+// extract-tested.js
+const fs = require('fs');
+const path = require('path');
+
+const testFiles = [
+  'src/BusinessLogicTest.gs',
+  'src/AuthenticationTest.gs',
+  'src/WebAppTest.gs',
+  'src/TriggersTest.gs',
+  'src/FormManagerTest.gs',
+  'src/MailManagerTest.gs',
+];
+
+testFiles.forEach(file => {
+  const content = fs.readFileSync(file, 'utf8');
+  const matches = [...content.matchAll(/^function\s+test([A-Z][a-zA-Z0-9_]*)/gm)];
+  const tested = matches.map(m => m[1].replace(/_.*/, ''));
+  console.log(`${path.basename(file)}: [${[...new Set(tested)].map(f => `'${f}'`).join(', ')}]`);
+});
+```
+
+### 3. 運用手順
+1. 上記スクリプトをローカルで実行し、各モジュールの関数リスト・テスト済みリストを抽出。
+2. 抽出結果をTest.gsのshowTestCoverage()のmoduleInfoに貼り付け。
+3. 必要に応じて手動で補正。
+4. カバレッジレポートを実行し、未テスト関数を可視化。
+
+---
+この運用により、カバレッジ管理の半自動化・メンテナンス性向上が可能です。

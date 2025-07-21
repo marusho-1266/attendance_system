@@ -260,7 +260,54 @@ function showTestCoverage() {
     },
     'SpreadsheetManager.gs': {
       functions: ['getSheet', 'createSheet', 'sheetExists', 'getOrCreateSheet', 'appendDataToSheet'],
-      tested: ['getOrCreateSheet', 'appendDataToSheet'] // パラメータ検証のみ
+      tested: ['getOrCreateSheet', 'appendDataToSheet']
+    },
+    'BusinessLogic.gs': {
+      functions: ['isHoliday', 'calcWorkTime', 'parseTimeToMinutes', 'getEmployee', 'isValidEmail'],
+      tested: ['isHoliday', 'calcWorkTime', 'getEmployee']
+    },
+    'Authentication.gs': {
+      functions: [
+        'initializeAuthCache', 'loadAllEmployeesData', 'getCachedEmployee', 'getCacheStats', 'clearAuthCache', 'isCacheValid',
+        'getCachedManagerEmails', 'setCachedManagerEmails', 'authenticateUser', 'checkPermission', 'getManagerEmails', 'isManager',
+        'getSessionInfo', 'logSecurityEvent', 'isBlockedByBruteForce', 'getFailedAttempts', 'incrementFailedAttempts', 'clearFailedAttempts',
+        'resetAllFailedAttempts', 'isValidEmailEnhanced', 'isValidEmail', 'getEmployee'
+      ],
+      tested: ['authenticateUser', 'checkPermission', 'getSessionInfo']
+    },
+    'WebApp.gs': {
+      functions: [
+        'doGet', 'doPost', 'authenticateWebAppUser', 'parseRequestData', 'validateAction', 'createUnauthorizedResponse',
+        'createErrorResponse', 'createJsonResponse', 'generateClockHTML', 'createHTMLTemplate', 'getHTMLStyles', 'getHeaderHTML',
+        'getCurrentTimeHTML', 'getButtonsHTML', 'getStatusHTML', 'getJavaScriptCode', 'updateTime', 'clockAction', 'getActionMessage',
+        'processClock', 'checkDuplicateAction', 'saveClockData'
+      ],
+      tested: ['doGet', 'doPost', 'generateClockHTML', 'processClock']
+    },
+    'Triggers.gs': {
+      functions: [
+        'onOpen', 'dailyJob', 'weeklyOvertimeJob', 'monthlyJob', 'updateDailySummary', 'checkAndSendUnfinishedClockOutEmail',
+        'sendUnfinishedClockOutEmail', 'calculateWeeklyOvertime', 'sendOvertimeWarningEmail', 'updateMonthlySummary',
+        'exportMonthlySummaryToCSV', 'sendMonthlyReportEmail', 'showSystemStatus', 'runSystemTests', 'manualDailyJob',
+        'manualWeeklyJob', 'manualMonthlyJob', 'showHelp'
+      ],
+      tested: ['onOpen', 'dailyJob', 'weeklyOvertimeJob', 'monthlyJob', 'exportMonthlySummaryToCSV', 'sendUnfinishedClockOutEmail', 'sendMonthlyReportEmail']
+    },
+    'FormManager.gs': {
+      functions: [
+        'processFormResponse', 'convertFormDataToLogRaw', 'validateFormData', 'saveFormDataToSheet', 'checkDuplicateFormResponse',
+        'processMultipleFormResponses', 'getFormResponseStats', 'processGoogleFormResponse', 'cleanupFormData'
+      ],
+      tested: ['processFormResponse', 'convertFormDataToLogRaw', 'validateFormData', 'saveFormDataToSheet', 'checkDuplicateFormResponse', 'processMultipleFormResponses', 'getFormResponseStats']
+    },
+    'MailManager.gs': {
+      functions: [
+        'sendUnfinishedClockOutEmail_MailManager', 'sendMonthlyReportEmail_MailManager', 'generateUnfinishedClockOutEmailTemplate',
+        'generateMonthlyReportEmailTemplate', 'checkEmailQuota', 'getEmailQuotaValue', 'getTodayEmailCount', 'setTodayEmailCountForTest',
+        'incrementTodayEmailCount', 'sendEmail_MailManager', 'getEmailStats', 'sendMultipleEmails', 'sendUnfinishedClockOutEmail',
+        'sendMonthlyReportEmail', 'sendEmail'
+      ],
+      tested: ['sendUnfinishedClockOutEmail_MailManager', 'sendMonthlyReportEmail_MailManager', 'generateUnfinishedClockOutEmailTemplate', 'generateMonthlyReportEmailTemplate', 'checkEmailQuota', 'getEmailStats', 'sendMultipleEmails', 'sendUnfinishedClockOutEmail', 'sendMonthlyReportEmail', 'sendEmail']
     }
   };
   
@@ -268,6 +315,11 @@ function showTestCoverage() {
     var info = moduleInfo[module];
     var coverage = (info.tested.length / info.functions.length * 100).toFixed(1);
     console.log(module + ': ' + coverage + '% (' + info.tested.length + '/' + info.functions.length + ' 関数)');
+    // 未テスト関数の自動検出・出力
+    var untested = info.functions.filter(function(fn) { return info.tested.indexOf(fn) === -1; });
+    if (untested.length > 0) {
+      console.log('  未テスト関数: ' + untested.join(', '));
+    }
   });
   
   console.log('\n注: カバレッジは開発支援用です。100%を目標にせず、重要な機能の品質確保に活用してください。');
