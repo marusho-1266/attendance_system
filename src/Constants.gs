@@ -272,6 +272,81 @@ function getEmailConfig(configKey) {
 }
 
 /**
+ * メールテンプレート定数
+ */
+var EMAIL_TEMPLATES = {
+  // 未退勤者メールテンプレート
+  UNFINISHED_CLOCKOUT: {
+    SUBJECT_PREFIX: '【重要】未退勤通知',
+    SYSTEM_NAME: '出勤管理システム',
+    AUTO_SEND_NOTICE: '※このメールは自動送信です。',
+    FORM_INSTRUCTION: '退勤打刻を忘れた場合は、修正申請フォームより報告してください。'
+  },
+  
+  // 月次レポートメールテンプレート
+  MONTHLY_REPORT: {
+    SUBJECT_PREFIX: '【月次レポート】',
+    SUBJECT_SUFFIX: ' 出勤管理',
+    SYSTEM_NAME: '出勤管理システム',
+    REPORT_TITLE: '出勤管理システム 月次レポート'
+  },
+  
+  // 共通テンプレート
+  COMMON: {
+    SYSTEM_SIGNATURE: '出勤管理システム',
+    AUTO_SEND_NOTICE: '※このメールは自動送信です。返信は不要です。',
+    LINE_BREAK: '\n',
+    DOUBLE_LINE_BREAK: '\n\n'
+  }
+};
+
+/**
+ * メールテンプレート取得関数
+ */
+function getEmailTemplate(templateType, templateKey) {
+  if (!EMAIL_TEMPLATES.hasOwnProperty(templateType)) {
+    throw new Error('Unknown email template type: ' + templateType);
+  }
+  
+  var template = EMAIL_TEMPLATES[templateType];
+  if (templateKey && !template.hasOwnProperty(templateKey)) {
+    throw new Error('Unknown template key: ' + templateKey + ' in template type: ' + templateType);
+  }
+  
+  return templateKey ? template[templateKey] : template;
+}
+
+/**
+ * パラメータ付きメールテンプレート定義
+ */
+var EMAIL_TEMPLATE_DEFS = {
+  UNFINISHED_CLOCKOUT: {
+    subject: '【重要】未退勤通知 ({date})',
+    body: '{systemName}より自動送信\n\n{name} 様\n\n{date} の退勤打刻が記録されていません。\n出勤時刻: {clockInTime}\n現在時刻: {currentTime}\n\n{formInstruction}\n\n{autoSendNotice}\n{systemSignature}'
+  },
+  MONTHLY_REPORT: {
+    subject: '【月次レポート】{month} 出勤管理',
+    body: '{reportTitle}\n\n対象月: {month}\n総従業員数: {totalEmployees}名\n総稼働日数: {totalWorkDays}日\n平均労働時間: {averageWorkHours}時間\n総残業時間: {overtimeHours}時間\n\nCSVファイル: {csvFileName}\n\n詳細については添付のCSVファイルをご確認ください。\n\n{systemSignature}'
+  }
+};
+
+/**
+ * テンプレート文字列をパラメータで置換する共通関数
+ */
+function buildEmailTemplate(type, params) {
+  var def = EMAIL_TEMPLATE_DEFS[type];
+  if (!def) throw new Error('Unknown email template type: ' + type);
+  var subject = def.subject;
+  var body = def.body;
+  Object.keys(params).forEach(function(key) {
+    var re = new RegExp('{' + key + '}', 'g');
+    subject = subject.replace(re, params[key]);
+    body = body.replace(re, params[key]);
+  });
+  return { subject: subject, body: body };
+}
+
+/**
  * アプリケーション設定取得関数（TDD対象）
  */
 function getAppConfig(configKey) {

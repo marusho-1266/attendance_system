@@ -115,4 +115,71 @@ function quickTDDCheck() {
   }
   
   return failCount === 0;
+}
+
+/**
+ * MailManager TDD テスト実行
+ * mail-1フェーズのRed-Green-Refactorサイクル用
+ */
+function runMailManagerTDDTests() {
+  console.log('=== MailManager TDD テスト実行 ===');
+  testResults = []; // 結果をリセット
+  
+  // テストモードに設定
+  setEmailMode('MOCK');
+  clearMockEmailData();
+  
+  // 基本テスト実行
+  runTest(testSendUnfinishedClockOutEmail_ValidData_SendsEmail, 'testSendUnfinishedClockOutEmail_ValidData_SendsEmail');
+  runTest(testSendUnfinishedClockOutEmail_NoUnfinished_ReturnsSuccess, 'testSendUnfinishedClockOutEmail_NoUnfinished_ReturnsSuccess');
+  runTest(testGenerateUnfinishedClockOutEmailTemplate_ValidData_ReturnsCorrectTemplate, 'testGenerateUnfinishedClockOutEmailTemplate_ValidData_ReturnsCorrectTemplate');
+  runTest(testSendMonthlyReportEmail_ValidData_SendsEmail, 'testSendMonthlyReportEmail_ValidData_SendsEmail');
+  runTest(testGenerateMonthlyReportEmailTemplate_ValidData_ReturnsCorrectTemplate, 'testGenerateMonthlyReportEmailTemplate_ValidData_ReturnsCorrectTemplate');
+  
+  // クォータ管理テスト
+  runTest(testCheckEmailQuota_WithinLimit_ReturnsTrue, 'testCheckEmailQuota_WithinLimit_ReturnsTrue');
+  runTest(testCheckEmailQuota_ExceededLimit_ReturnsFalse, 'testCheckEmailQuota_ExceededLimit_ReturnsFalse');
+  
+  // エラーハンドリングテスト
+  runTest(testSendEmail_ErrorOccurs_ReturnsError, 'testSendEmail_ErrorOccurs_ReturnsError');
+  runTest(testSendEmail_ExceptionHandling_ReturnsError, 'testSendEmail_ExceptionHandling_ReturnsError');
+  
+  showTestSummary();
+  
+  var failCount = testResults.filter(function(result) { return result.status === 'FAIL'; }).length;
+  if (failCount === 0) {
+    console.log('✅ MailManager基本テスト全通過 - Greenステップ完了');
+    console.log('次: Refactorステップ（テンプレート化・クォータ管理強化）に進んでください');
+  } else {
+    console.log('❌ ' + failCount + '件のテスト失敗 - 実装を修正してください');
+  }
+  
+  return failCount === 0;
+}
+
+/**
+ * MailManager クイックテスト
+ * 最重要な機能のみ素早くテスト
+ */
+function quickMailManagerTest() {
+  console.log('=== MailManager クイックテスト ===');
+  testResults = [];
+  
+  // モック設定
+  setEmailMode('MOCK');
+  clearMockEmailData();
+  
+  // 重要な機能のみテスト
+  runTest(testSendUnfinishedClockOutEmail_ValidData_SendsEmail, 'testSendUnfinishedClockOutEmail_ValidData_SendsEmail');
+  runTest(testGenerateUnfinishedClockOutEmailTemplate_ValidData_ReturnsCorrectTemplate, 'testGenerateUnfinishedClockOutEmailTemplate_ValidData_ReturnsCorrectTemplate');
+  
+  var passCount = testResults.filter(function(result) { return result.status === 'PASS'; }).length;
+  
+  if (passCount === testResults.length) {
+    console.log('✅ MailManager クイックテスト成功: ' + passCount + '/' + testResults.length);
+  } else {
+    console.log('❌ MailManager クイックテスト失敗: ' + passCount + '/' + testResults.length);
+  }
+  
+  return passCount === testResults.length;
 } 

@@ -1,0 +1,76 @@
+17:51:01	お知らせ	実行開始
+17:51:02	情報	⚡ Triggers.gs クイックテスト開始
+17:51:02	情報	------------------------------
+17:51:02	情報	⚡ testOnOpen_SpreadsheetOpen_AddsManagementMenu
+17:51:02	情報	onOpen: 管理メニュー追加処理開始
+17:51:02	情報	✓ onOpen: 管理メニュー追加完了
+17:51:02	情報	✓ onOpen関数の実行確認完了: Management menu added successfully
+17:51:02	情報	✅ PASS
+17:51:02	情報	⚡ testDailyJob_ExecuteDaily_UpdatesDailySummary
+17:51:03	情報	テスト対象日: 2025-07-20
+17:51:03	情報	dailyJob: 日次処理開始
+17:51:03	情報	Daily_Summary更新処理開始
+17:51:03	情報	対象日: 2025-07-20
+17:51:03	情報	従業員数: 5
+17:51:03	情報	対象従業員数: 0
+17:51:04	情報	Daily_Summary更新完了: 0件
+17:51:04	情報	✓ Daily_Summary更新完了: 0件
+17:51:04	情報	未退勤者チェック処理開始
+17:51:04	情報	未退勤者チェック対象日: 2025-07-20
+17:51:05	情報	アクティブ従業員数: 5
+17:51:05	情報	未退勤者数: 0
+17:51:05	情報	未退勤者なし
+17:51:05	情報	✓ 未退勤者チェック完了: 0件
+17:51:05	情報	✓ dailyJob: 処理完了（実行時間: 2788ms）
+17:51:06	情報	✓ Daily_Summary更新確認: 対象日レコード数=0, 更新件数=0
+17:51:06	情報	✓ dailyJob実行時間確認: 2801ms
+17:51:06	情報	✅ PASS
+17:51:06	情報	⚡ testWeeklyOvertimeJob_Monday_CalculatesOvertimeHours
+17:51:06	情報	weeklyOvertimeJob: 週次残業処理開始
+17:51:06	情報	週次残業集計処理開始
+17:51:06	情報	集計期間: 2025-06-23 〜 2025-07-21
+17:51:06	情報	対象従業員数: 5
+17:51:06	情報	週次残業集計完了: 5名
+17:51:06	情報	✓ 残業集計完了: 5名分
+17:51:06	情報	✓ 残業超過者なし
+17:51:06	情報	✓ weeklyOvertimeJob: 処理完了（実行時間: 567ms）
+17:51:06	情報	✓ 週次残業集計実行確認
+17:51:06	情報	✅ PASS
+17:51:06	情報	⚡ testMonthlyJob_FirstDayOfMonth_UpdatesMonthlySummary
+17:51:06	情報	monthlyJob: 月次処理開始
+17:51:06	情報	Monthly_Summary更新処理（簡易実装）
+17:51:06	情報	✓ Monthly_Summary更新完了: 15件
+17:51:06	情報	CSV出力処理（モック）: monthly_report_2025-07.csv
+17:51:06	情報	✓ CSV出力完了: monthly_report_2025-07.csv
+17:51:06	情報	✓ 月次レポートメール送信完了
+17:51:06	情報	✓ monthlyJob: 処理完了（実行時間: 2ms）
+17:51:06	情報	✓ 月次集計処理実行確認
+17:51:06	情報	✅ PASS
+17:51:06	情報	------------------------------
+17:51:06	情報	⚡ クイックテスト完了: 4/4 (4720ms)
+17:51:06	情報	=== MailManager TDD テスト実行 ===
+17:51:06	情報	メール送信（モック）: 2名
+17:51:06	情報	sendUnfinishedClockOutEmail_MailManager return: {"success":true,"sentCount":2,"message":"送信完了（モック）"}
+17:51:06	情報	テスト結果デバッグ: {"success":true,"sentCount":2,"message":"送信完了（モック）"}
+17:51:06	情報	result.sentCount: 2
+17:51:06	情報	result.success: true
+17:51:06	情報	✓ testSendUnfinishedClockOutEmail_ValidData_SendsEmail - PASS
+17:51:06	情報	✓ testSendUnfinishedClockOutEmail_NoUnfinished_ReturnsSuccess - PASS
+17:51:06	情報	✓ testGenerateUnfinishedClockOutEmailTemplate_ValidData_ReturnsCorrectTemplate - PASS
+17:51:06	情報	月次レポートメール送信（モック）
+17:51:06	情報	sendMonthlyReportEmail_MailManager return: {"success":true,"sentCount":2,"message":"月次レポート送信完了（モック）"}
+17:51:06	情報	✓ testSendMonthlyReportEmail_ValidData_SendsEmail - PASS
+17:51:06	情報	✓ testGenerateMonthlyReportEmailTemplate_ValidData_ReturnsCorrectTemplate - PASS
+17:51:06	情報	✓ testCheckEmailQuota_WithinLimit_ReturnsTrue - PASS
+17:51:06	情報	✓ testCheckEmailQuota_ExceededLimit_ReturnsFalse - PASS
+17:51:06	情報	✓ testSendEmail_ErrorOccurs_ReturnsError - PASS
+17:51:06	情報	✓ testSendEmail_ExceptionHandling_ReturnsError - PASS
+17:51:06	情報	
+=== テスト結果サマリー ===
+17:51:06	情報	実行テスト数: 9
+17:51:06	情報	成功: 9
+17:51:06	情報	失敗: 0
+17:51:06	情報	=== GAS Test Framework - 実行完了 ===
+17:51:06	情報	✅ MailManager基本テスト全通過 - Greenステップ完了
+17:51:06	情報	次: Refactorステップ（テンプレート化・クォータ管理強化）に進んでください
+17:51:07	お知らせ	実行完了

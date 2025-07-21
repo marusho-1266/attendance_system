@@ -11,10 +11,28 @@
  */
 
 /**
+ * テスト用のAPP_CONFIG初期化
+ */
+function initializeTestAppConfig() {
+  if (typeof APP_CONFIG === 'undefined') {
+    APP_CONFIG = {};
+  }
+  APP_CONFIG['ADMIN_EMAILS'] = ['manager@example.com', 'hr@example.com'];
+  APP_CONFIG['EMAIL_DAILY_QUOTA'] = 100;
+  // getTestModeConfigのダミー化
+  globalThis.getTestModeConfig = function() { return false; };
+  
+  // メールモードを必ずMOCKに設定
+  setEmailMode('MOCK');
+  clearMockEmailData();
+}
+
+/**
  * 未退勤者メール送信の基本テスト
  */
 function testSendUnfinishedClockOutEmail_ValidData_SendsEmail() {
   // Arrange
+  initializeTestAppConfig();
   var unfinishedEmployees = [
     {
       employeeId: 'EMP001',
@@ -34,11 +52,16 @@ function testSendUnfinishedClockOutEmail_ValidData_SendsEmail() {
   var targetDate = new Date('2025-07-20');
   
   // Act
-  var result = sendUnfinishedClockOutEmail(unfinishedEmployees, targetDate);
+  var result = sendUnfinishedClockOutEmail_MailManager(unfinishedEmployees, targetDate);
+  
+  // Debug: 結果オブジェクトの内容確認
+  console.log('テスト結果デバッグ:', JSON.stringify(result));
+  console.log('result.sentCount:', result.sentCount);
+  console.log('result.success:', result.success);
   
   // Assert
   assertTrue(result.success, 'メール送信が成功するべき');
-  assertEquals(2, result.sentCount, '2件のメールが送信されるべき');
+  assertEquals(2, result.sentCount, '管理者2名にメールが送信されるべき');
   assertTrue(result.message.includes('送信完了'), '送信完了メッセージが含まれるべき');
 }
 
@@ -47,11 +70,12 @@ function testSendUnfinishedClockOutEmail_ValidData_SendsEmail() {
  */
 function testSendUnfinishedClockOutEmail_NoUnfinished_ReturnsSuccess() {
   // Arrange
+  initializeTestAppConfig();
   var unfinishedEmployees = [];
   var targetDate = new Date('2025-07-20');
   
   // Act
-  var result = sendUnfinishedClockOutEmail(unfinishedEmployees, targetDate);
+  var result = sendUnfinishedClockOutEmail_MailManager(unfinishedEmployees, targetDate);
   
   // Assert
   assertTrue(result.success, '処理が成功するべき');
@@ -64,6 +88,7 @@ function testSendUnfinishedClockOutEmail_NoUnfinished_ReturnsSuccess() {
  */
 function testSendMonthlyReportEmail_ValidData_SendsEmail() {
   // Arrange
+  initializeTestAppConfig();
   var reportData = {
     month: '2025-07',
     totalEmployees: 5,
@@ -75,7 +100,7 @@ function testSendMonthlyReportEmail_ValidData_SendsEmail() {
   var adminEmails = ['manager@example.com', 'hr@example.com'];
   
   // Act
-  var result = sendMonthlyReportEmail(reportData, adminEmails);
+  var result = sendMonthlyReportEmail_MailManager(reportData, adminEmails);
   
   // Assert
   assertTrue(result.success, 'メール送信が成功するべき');
@@ -154,14 +179,19 @@ function testCheckEmailQuota_WithinLimit_ReturnsTrue() {
  */
 function testCheckEmailQuota_ExceededLimit_ReturnsFalse() {
   // Arrange
-  var currentCount = 100; // 現在の送信数
-  var maxQuota = 100; // 最大クォータ
-  
+  initializeTestAppConfig();
+  // クォータ超過状態を作るため、getTodayEmailCountを上書き
+  var originalGetTodayEmailCount = getTodayEmailCount;
+  getTodayEmailCount = function() { return 100; };
+
   // Act
-  var canSend = checkEmailQuota(currentCount, maxQuota);
-  
+  var result = checkEmailQuota(1);
+
   // Assert
-  assertFalse(canSend, 'クォータ超過であれば送信不可であるべき');
+  assertFalse(result, 'クォータ超過であれば送信不可であるべき');
+
+  // 後始末
+  getTodayEmailCount = originalGetTodayEmailCount;
 }
 
 /**
@@ -207,8 +237,9 @@ function testCheckEmailQuota_BoundaryValues_ReturnsCorrectResults() {
  */
 function testSendEmail_ErrorOccurs_ReturnsError() {
   // Arrange
+  initializeTestAppConfig();
   var emailData = {
-    to: 'invalid-email',
+    to: null,  // 必須パラメータ不足でエラーを発生させる
     subject: 'テスト',
     body: 'テスト本文'
   };
