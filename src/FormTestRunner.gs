@@ -14,8 +14,12 @@
  * 全テストケースを実行し、結果をレポート
  */
 function runFormManagerTests() {
-  // システム設定の初期化
-  initializeSystemConfigIfNeeded();
+  // システム設定の初期化（失敗してもテストは継続）
+  try {
+    initializeSystemConfigIfNeeded();
+  } catch (error) {
+    console.log('⚠️ システム設定初期化エラー: ' + error.message);
+  }
   
   // テストケースの定義
   var testFunctions = [
