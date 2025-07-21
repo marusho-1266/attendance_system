@@ -75,8 +75,8 @@ function runAllTests() {
   testResults = []; // 結果をリセット
   
   // まずはダミーテストから実行
-  runTest(testDummy_Assert_True_ShouldPass, 'testDummy_Assert_True_ShouldPass');
-  runTest(testDummy_Assert_False_ShouldFail, 'testDummy_Assert_False_ShouldFail');
+  runTest(testAssert_True_ReturnsPass, 'testAssert_True_ReturnsPass');
+  runTest(testAssert_False_ReturnsFail, 'testAssert_False_ReturnsFail');
   
   // Constants.gs のテスト実行
   runConstantsTests();
@@ -117,7 +117,7 @@ function showTestSummary() {
 /**
  * ダミーテスト（成功）
  */
-function testDummy_Assert_True_ShouldPass() {
+function testAssert_True_ReturnsPass() {
   // Red: まずは必ず成功するテストで環境確認
   assert(true, 'ダミーテスト - trueは成功すべき');
 }
@@ -126,7 +126,7 @@ function testDummy_Assert_True_ShouldPass() {
  * ダミーテスト（失敗例）
  * このテストは実際にはコメントアウトして使用
  */
-function testDummy_Assert_False_ShouldFail() {
+function testAssert_False_ReturnsFail() {
   // このテストは失敗を確認するためのもの（通常はコメントアウト）
   // assert(false, 'ダミーテスト - falseは失敗すべき');
   
@@ -195,7 +195,7 @@ function runQuickTests() {
   testResults = []; // 結果をリセット
   
   // 基本的なテストのみ実行（高速化）
-  runTest(testDummy_Assert_True_ShouldPass, 'testDummy_Assert_True_ShouldPass');
+  runTest(testAssert_True_ReturnsPass, 'testAssert_True_ReturnsPass');
   
   // 最新実装のテストを優先実行
   runTest(testGetColumnIndex_Employee_Name_ReturnsCorrectIndex, 'testGetColumnIndex_Employee_Name_ReturnsCorrectIndex');

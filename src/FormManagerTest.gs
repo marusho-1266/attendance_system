@@ -196,7 +196,7 @@ function testCheckDuplicateFormResponse_DuplicateData_ReturnsTrue() {
 /**
  * フォーム応答処理の統合テスト
  */
-function testProcessFormResponse_IntegrationTest_CompleteWorkflow() {
+function testProcessFormResponse_Integration_CompleteWorkflow() {
   // Arrange
   var formResponse = {
     timestamp: new Date('2025-07-18T22:00:00'), // 時刻を変更して重複を回避

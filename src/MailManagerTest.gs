@@ -316,7 +316,7 @@ function testGetEmailStats_ValidData_ReturnsStats() {
 /**
  * メール送信の統合テスト
  */
-function testSendUnfinishedClockOutEmail_IntegrationTest_CompleteWorkflow() {
+function testSendUnfinishedClockOutEmail_Integration_CompleteWorkflow() {
   // Arrange
   var unfinishedEmployees = [
     {

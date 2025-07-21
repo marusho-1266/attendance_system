@@ -60,9 +60,9 @@ function testIsHoliday_NationalHoliday_ReturnsTrue() {
 function testIsHoliday_NullDate_ThrowsError() {
   try {
     isHoliday(null);
-    assert(false, 'null値でエラーが発生すべき');
+    assert(false, 'null値で例外が発生し、catchされるべき');
   } catch (error) {
-    assertTrue(error.message.includes('Invalid date'), 'null値で適切なエラーメッセージ');
+    assertTrue(error.message.includes('Invalid date'), 'null値入力時は"Invalid date"エラーが返るべき');
   }
 }
 
