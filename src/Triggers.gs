@@ -304,14 +304,16 @@ function updateDailySummary() {
         dayData.status = 'INCOMPLETE';
       }
       
-      // Daily_Summary用のデータを準備
+      // Daily_Summary用のデータを準備（9列に合わせる）
       summaryData.push([
         dayData.date,
         employeeId,
         dayData.clockIn || '',
         dayData.clockOut || '',
+        '', // 休憩（未実装）
         Math.round(dayData.workMinutes),
         Math.round(dayData.overtimeMinutes),
+        '', // 遅刻/早退（未実装）
         dayData.status
       ]);
       
@@ -502,21 +504,64 @@ function sendUnfinishedClockOutEmail(unfinishedEmployees, targetDate) {
     // 管理者メールアドレスを取得（設定から）
     var adminEmails = getAppConfig('ADMIN_EMAILS');
     
-    // 実際のメール送信は現在モック実装
-    console.log('メール送信（モック）:');
-    console.log('宛先: ' + JSON.stringify(adminEmails));
-    console.log('件名: ' + subject);
-    console.log('本文プレビュー: ' + body.substring(0, 100) + '...');
+    // テストモードかどうかの確認
+    var isTestMode = getTestModeConfig('EMAIL_MOCK_ENABLED');
+    var shouldActuallySend = getTestModeConfig('EMAIL_ACTUAL_SEND');
     
-    // TODO: 実際のメール送信実装
-    // GmailApp.sendEmail(adminEmails.join(','), subject, body);
+    if (isTestMode) {
+      // テストモード：モック情報を保存
+      var mockData = getMockEmailData();
+      var emailId = 'unfinished_clockout_' + targetDate + '_' + new Date().getTime();
+      
+      mockData[emailId] = {
+        type: 'unfinished_clockout',
+        recipients: adminEmails,
+        subject: subject,
+        body: body,
+        unfinishedEmployees: unfinishedEmployees.map(function(emp) {
+          return { id: emp.id, name: emp.name, department: emp.department };
+        }),
+        targetDate: targetDate,
+        sentAt: new Date().toISOString(),
+        actualSend: shouldActuallySend
+      };
+      
+      console.log('メール送信（テストモック）:');
+      console.log('メールID: ' + emailId);
+      console.log('宛先: ' + JSON.stringify(adminEmails));
+      console.log('件名: ' + subject);
+      console.log('未退勤者数: ' + unfinishedEmployees.length);
+      
+      if (shouldActuallySend) {
+        // 実際にメール送信も行う場合
+        try {
+          GmailApp.sendEmail(adminEmails.join(','), subject, body);
+          mockData[emailId].actualSent = true;
+          console.log('✓ 実際のメール送信完了');
+        } catch (error) {
+          mockData[emailId].actualSent = false;
+          mockData[emailId].sendError = error.message;
+          console.log('❌ 実際のメール送信失敗: ' + error.message);
+        }
+      }
+    } else {
+      // 本番モード：実際のメール送信
+      try {
+        GmailApp.sendEmail(adminEmails.join(','), subject, body);
+        console.log('✓ メール送信完了（本番モード）');
+      } catch (error) {
+        throw new Error('Mail sending failed: ' + error.message);
+      }
+    }
     
     return {
       success: true,
       recipients: adminEmails,
       subject: subject,
       unfinishedCount: unfinishedEmployees.length,
-      sentAt: new Date().toISOString()
+      sentAt: new Date().toISOString(),
+      mockMode: isTestMode,
+      emailId: isTestMode ? emailId : null
     };
     
   } catch (error) {

@@ -117,6 +117,34 @@ function setupSampleHolidayData() {
 }
 
 /**
+ * システム設定の初期化
+ * System_Configシートに必要な設定を追加
+ */
+function setupSystemConfigData() {
+  try {
+    var configData = [
+      ['ADMIN_EMAILS', 'manager@example.com,dev-manager@example.com', '管理者メールアドレス（カンマ区切り）', 'TRUE'],
+      ['EMAIL_MOCK_ENABLED', 'TRUE', 'メール送信のモック有効化', 'TRUE'],
+      ['EMAIL_ACTUAL_SEND', 'FALSE', '実際のメール送信フラグ', 'TRUE'],
+      ['MAX_WORK_HOURS_PER_DAY', '24', '1日の最大労働時間', 'TRUE'],
+      ['STANDARD_WORK_HOURS', '8', '標準労働時間', 'TRUE'],
+      ['BREAK_TIME_AUTO_DEDUCT', '45', '自動控除する休憩時間（分）', 'TRUE'],
+      ['OVERTIME_THRESHOLD', '8', '残業判定の閾値（時間）', 'TRUE']
+    ];
+    
+    var sheetName = getSheetName('SYSTEM_CONFIG');
+    
+    configData.forEach(function(rowData) {
+      appendDataToSheet(sheetName, rowData);
+    });
+    
+    console.log('システム設定に ' + configData.length + '件の設定を追加しました');
+  } catch (error) {
+    throw new Error('システム設定初期化エラー: ' + error.message);
+  }
+}
+
+/**
  * システム統合テスト
  * セットアップ後の動作確認
  */

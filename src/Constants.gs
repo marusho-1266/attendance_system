@@ -199,6 +199,79 @@ function getActionConstant(actionType) {
 }
 
 /**
+ * メール送信モード設定
+ * 相互排他的な設定で、本番環境での誤用を防止
+ */
+var EMAIL_MODE_CONFIG = {
+  // メール送信モード（'MOCK' | 'ACTUAL'）
+  // MOCK: テスト環境用（実際のメールは送信されない）
+  // ACTUAL: 本番環境用（実際のメールが送信される）
+  EMAIL_SEND_MODE: 'MOCK',
+  
+  // モックメール情報の保存先（テスト環境のみ使用）
+  EMAIL_MOCK_STORAGE: {},
+  
+  // メール送信クォータ設定
+  EMAIL_DAILY_QUOTA: 100,      // 1日の最大送信数
+  EMAIL_QUOTA_RESET_HOUR: 0    // クォータリセット時刻（0-23時）
+};
+
+/**
+ * モックメール情報をクリア
+ */
+function clearMockEmailData() {
+  EMAIL_MODE_CONFIG.EMAIL_MOCK_STORAGE = {};
+}
+
+/**
+ * モックメール情報を取得
+ */
+function getMockEmailData() {
+  return EMAIL_MODE_CONFIG.EMAIL_MOCK_STORAGE;
+}
+
+/**
+ * メール送信モード取得関数
+ */
+function getEmailMode() {
+  return EMAIL_MODE_CONFIG.EMAIL_SEND_MODE;
+}
+
+/**
+ * メール送信モード設定関数
+ */
+function setEmailMode(mode) {
+  if (mode !== 'MOCK' && mode !== 'ACTUAL') {
+    throw new Error('Invalid email mode: ' + mode + '. Must be "MOCK" or "ACTUAL"');
+  }
+  EMAIL_MODE_CONFIG.EMAIL_SEND_MODE = mode;
+}
+
+/**
+ * メール送信モードがモックかどうかを判定
+ */
+function isEmailMockMode() {
+  return EMAIL_MODE_CONFIG.EMAIL_SEND_MODE === 'MOCK';
+}
+
+/**
+ * メール送信モードが実際の送信かどうかを判定
+ */
+function isEmailActualMode() {
+  return EMAIL_MODE_CONFIG.EMAIL_SEND_MODE === 'ACTUAL';
+}
+
+/**
+ * メール設定取得関数
+ */
+function getEmailConfig(configKey) {
+  if (!EMAIL_MODE_CONFIG.hasOwnProperty(configKey)) {
+    throw new Error('Unknown email config key: ' + configKey);
+  }
+  return EMAIL_MODE_CONFIG[configKey];
+}
+
+/**
  * アプリケーション設定取得関数（TDD対象）
  */
 function getAppConfig(configKey) {

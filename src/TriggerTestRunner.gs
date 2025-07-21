@@ -142,6 +142,7 @@ function runTriggersTestsDetailed() {
     
     // dailyJob関数のテスト
     'testDailyJob_ExecuteDaily_UpdatesDailySummary',
+    'testDailyJob_PerformanceCheck_ExecutesWithinTimeLimit',
     'testDailyJob_HasUnfinishedClockOut_SendsEmail',
     'testDailyJob_QuotaCompliance_StaysWithinLimits',
     

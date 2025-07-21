@@ -1,0 +1,77 @@
+22:22:25	お知らせ	実行開始
+22:22:25	情報	⚡ Triggers.gs クイックテスト開始
+22:22:25	情報	------------------------------
+22:22:25	情報	⚡ testOnOpen_SpreadsheetOpen_AddsManagementMenu
+22:22:25	情報	onOpen: 管理メニュー追加処理開始
+22:22:26	情報	✓ onOpen: 管理メニュー追加完了
+22:22:26	情報	✓ onOpen関数の実行確認完了: Management menu added successfully
+22:22:26	情報	✅ PASS
+22:22:26	情報	⚡ testDailyJob_ExecuteDaily_UpdatesDailySummary
+22:22:26	情報	テスト対象日: 2025-07-19
+22:22:26	情報	dailyJob: 日次処理開始
+22:22:26	情報	Daily_Summary更新処理開始
+22:22:26	情報	対象日: 2025-07-19
+22:22:27	情報	従業員数: 5
+22:22:27	情報	対象従業員数: 0
+22:22:28	情報	Daily_Summary更新完了: 0件
+22:22:28	情報	✓ Daily_Summary更新完了: 0件
+22:22:28	情報	未退勤者チェック処理開始
+22:22:28	情報	未退勤者チェック対象日: 2025-07-19
+22:22:29	情報	アクティブ従業員数: 5
+22:22:29	情報	未退勤者数: 0
+22:22:29	情報	未退勤者なし
+22:22:29	情報	✓ 未退勤者チェック完了: 0件
+22:22:29	情報	✓ dailyJob: 処理完了（実行時間: 2846ms）
+22:22:29	情報	✓ Daily_Summary更新確認: 対象日レコード数=0, 更新件数=0
+22:22:29	情報	✓ dailyJob実行時間確認: 2850ms
+22:22:29	情報	✅ PASS
+22:22:29	情報	⚡ testWeeklyOvertimeJob_Monday_CalculatesOvertimeHours
+22:22:29	情報	weeklyOvertimeJob: 週次残業処理開始
+22:22:29	情報	週次残業集計処理開始
+22:22:29	情報	集計期間: 2025-06-22 〜 2025-07-20
+22:22:30	情報	対象従業員数: 5
+22:22:30	情報	週次残業集計完了: 5名
+22:22:30	情報	✓ 残業集計完了: 5名分
+22:22:30	情報	✓ 残業超過者なし
+22:22:30	情報	✓ weeklyOvertimeJob: 処理完了（実行時間: 558ms）
+22:22:30	情報	✓ 週次残業集計実行確認
+22:22:30	情報	✅ PASS
+22:22:30	情報	⚡ testMonthlyJob_FirstDayOfMonth_UpdatesMonthlySummary
+22:22:30	情報	monthlyJob: 月次処理開始
+22:22:30	情報	Monthly_Summary更新処理（簡易実装）
+22:22:30	情報	✓ Monthly_Summary更新完了: 24件
+22:22:30	情報	CSV出力処理（モック）: monthly_report_2025-07.csv
+22:22:30	情報	✓ CSV出力完了: monthly_report_2025-07.csv
+22:22:30	情報	月次レポートメール送信（モック）: monthly_report_2025-07.csv
+22:22:30	情報	✓ 月次レポートメール送信完了
+22:22:30	情報	✓ monthlyJob: 処理完了（実行時間: 11ms）
+22:22:30	情報	✓ 月次集計処理実行確認
+22:22:30	情報	✅ PASS
+22:22:30	情報	------------------------------
+22:22:30	情報	⚡ クイックテスト完了: 4/4 (4813ms)
+22:22:30	情報	=== FormManager TDDテスト実行開始 ===
+22:22:30	情報	実行日時: 2025/7/20 22:22:30
+22:22:30	情報	実行テスト数: 12
+22:22:30	情報	---
+22:22:31	情報	✅ testProcessFormResponse_ValidData_ReturnsSuccess - 成功 (478ms)
+22:22:31	情報	✅ testProcessFormResponse_InvalidData_ReturnsError - 成功 (0ms)
+22:22:31	情報	✅ testConvertFormDataToLogRaw_ValidData_ReturnsCorrectFormat - 成功 (1ms)
+22:22:31	情報	✅ testValidateFormData_ValidData_ReturnsTrue - 成功 (0ms)
+22:22:31	情報	✅ testValidateFormData_InvalidData_ReturnsFalse - 成功 (0ms)
+22:22:32	情報	✅ testSaveFormDataToSheet_ValidData_SavesSuccessfully - 成功 (402ms)
+22:22:32	情報	✅ testCheckDuplicateFormResponse_NewData_ReturnsFalse - 成功 (754ms)
+22:22:34	情報	✅ testCheckDuplicateFormResponse_DuplicateData_ReturnsTrue - 成功 (1232ms)
+22:22:34	情報	✅ testProcessFormResponse_IntegrationTest_CompleteWorkflow - 成功 (421ms)
+22:22:34	情報	✅ testProcessFormResponse_ExceptionHandling_ReturnsError - 成功 (1ms)
+22:22:34	情報	一括処理開始: 2件の応答
+22:22:36	情報	一括処理完了: 2件処理
+22:22:36	情報	✅ testProcessMultipleFormResponses_ValidData_ProcessesAll - 成功 (1645ms)
+22:22:37	情報	✅ testGetFormResponseStats_ValidData_ReturnsStats - 成功 (963ms)
+22:22:37	情報	---
+22:22:37	情報	=== FormManager TDDテスト実行結果 ===
+22:22:37	情報	総実行時間: 5935ms
+22:22:37	情報	成功: 12/12
+22:22:37	情報	失敗: 0/12
+22:22:37	情報	成功率: 100.0%
+22:22:37	情報	---
+22:22:38	お知らせ	実行完了

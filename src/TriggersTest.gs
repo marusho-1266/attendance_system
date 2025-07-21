@@ -18,13 +18,21 @@ function testOnOpen_SpreadsheetOpen_AddsManagementMenu() {
   // Red: スプレッドシート開発時に管理メニューが追加されることを期待
   
   try {
-    // onOpen関数の実行
-    onOpen();
+    // onOpen関数の実行と戻り値の検証
+    var result = onOpen();
     
-    // メニューが追加されたかの確認は実際のUI操作が必要なため
-    // ここでは関数が正常に実行完了することを確認
-    assertTrue(true, 'onOpen関数が正常に実行されるべき');
-    console.log('✓ onOpen関数の実行確認完了');
+    // 戻り値の構造検証
+    assertNotNull(result, 'onOpen関数は戻り値を返すべき');
+    assertTrue(typeof result === 'object', 'onOpen関数の戻り値はオブジェクトであるべき');
+    assertTrue('success' in result, 'onOpen関数の戻り値にsuccessプロパティがあるべき');
+    assertTrue('message' in result, 'onOpen関数の戻り値にmessageプロパティがあるべき');
+    assertTrue(typeof result.success === 'boolean', 'successプロパティはbooleanであるべき');
+    assertTrue(typeof result.message === 'string', 'messageプロパティはstringであるべき');
+    
+    // 正常実行の場合、successがtrueであることを確認
+    assertTrue(result.success, 'onOpen関数は正常実行時にsuccess: trueを返すべき: ' + result.message);
+    
+    console.log('✓ onOpen関数の実行確認完了: ' + result.message);
   } catch (error) {
     throw new Error('onOpen関数の実行に失敗: ' + error.message);
   }
@@ -37,12 +45,25 @@ function testOnOpen_ErrorHandling_DoesNotThrow() {
   // Red: エラーが発生してもスプレッドシートの開発が阻害されないことを期待
   
   try {
-    onOpen();
-    assertTrue(true, 'onOpen関数はエラーでもシステムを停止させるべきではない');
+    var result = onOpen();
+    
+    // onOpen関数は例外を投げずに結果を返すべき
+    assertNotNull(result, 'onOpen関数はエラー時でも戻り値を返すべき');
+    assertTrue(typeof result === 'object', 'onOpen関数の戻り値は常にオブジェクトであるべき');
+    assertTrue('success' in result, 'onOpen関数の戻り値には常にsuccessプロパティがあるべき');
+    assertTrue('message' in result, 'onOpen関数の戻り値には常にmessageプロパティがあるべき');
+    
+    // エラー時はsuccess: falseが返されることもあることを許容
+    if (!result.success) {
+      console.log('警告: onOpen実行時にエラー: ' + result.message);
+      assertTrue(typeof result.message === 'string' && result.message.length > 0, 
+                'エラー時はmessageに具体的なエラー内容があるべき');
+    }
+    
+    console.log('✓ onOpenのエラーハンドリング確認完了: success=' + result.success);
   } catch (error) {
-    // onOpen関数はユーザー体験を阻害してはいけないため、エラーでも継続すべき
-    console.log('警告: onOpen実行時にエラー: ' + error.message);
-    assertTrue(true, 'onOpenのエラーは記録されるが、システムは継続すべき');
+    // onOpen関数はユーザー体験を阻害してはいけないため、例外を投げるべきではない
+    throw new Error('onOpen関数は例外を投げるべきではない: ' + error.message);
   }
 }
 
@@ -55,21 +76,118 @@ function testDailyJob_ExecuteDaily_UpdatesDailySummary() {
   // Red: 前日分のLog_RawデータからDaily_Summaryを更新することを期待
   
   try {
-    // 実行前の状態確認（モックデータを想定）
+    // 実行前のDaily_Summaryシート状態を記録
+    var dailySummarySheet = getOrCreateSheet(getSheetName('DAILY_SUMMARY'));
+    var beforeData = dailySummarySheet.getDataRange().getValues();
+    var beforeRowCount = beforeData.length;
+    
+    // 前日の日付を計算
+    var yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    var targetDate = formatDate(yesterday);
+    
+    console.log('テスト対象日: ' + targetDate);
+    
+    // 実行前の時間記録
     var beforeExecution = new Date().getTime();
     
     // dailyJob関数の実行
-    dailyJob();
+    var result = dailyJob();
     
     var afterExecution = new Date().getTime();
     var executionTime = afterExecution - beforeExecution;
     
-    // 実行時間の確認（90分クォータ以内）
+    // 1. 戻り値の構造検証
+    assertNotNull(result, 'dailyJob関数は戻り値を返すべき');
+    assertTrue(typeof result === 'object', 'dailyJob関数の戻り値はオブジェクトであるべき');
+    assertTrue('success' in result, 'dailyJob関数の戻り値にsuccessプロパティがあるべき');
+    assertTrue('summaryResult' in result, 'dailyJob関数の戻り値にsummaryResultプロパティがあるべき');
+    assertTrue(result.success, 'dailyJob関数は正常実行時にsuccess: trueを返すべき');
+    
+    // 2. Daily_Summaryシートの更新確認
+    var afterData = dailySummarySheet.getDataRange().getValues();
+    
+    // ヘッダー行の確認
+    if (afterData.length > 0) {
+      var headerRow = afterData[0];
+      assertTrue(headerRow.length >= 9, 'Daily_Summaryにはヘッダー行に最低9列あるべき（実際: ' + headerRow.length + '列）');
+    }
+    
+    // 対象日のデータが含まれているかチェック
+    var targetDateRecordFound = false;
+    var targetDateRecords = 0;
+    
+    for (var i = 1; i < afterData.length; i++) {
+      var row = afterData[i];
+      if (row[0] && formatDate(new Date(row[0])) === targetDate) {
+        targetDateRecordFound = true;
+        targetDateRecords++;
+        
+        // データの基本構造確認
+        assertTrue(row.length >= 9, '各レコードは最低9列のデータを持つべき（実際: ' + row.length + '列）');
+        assertTrue(row[1] !== undefined && row[1] !== '', '社員IDは空でないべき');
+      }
+    }
+    
+    // 3. summaryResultの詳細検証
+    if (result.summaryResult) {
+      assertTrue('recordsUpdated' in result.summaryResult, 'summaryResultにrecordsUpdatedがあるべき');
+      assertTrue(typeof result.summaryResult.recordsUpdated === 'number', 'recordsUpdatedは数値であるべき');
+      
+      // 更新されたレコード数と実際の対象日レコード数の整合性確認
+      if (result.summaryResult.recordsUpdated > 0) {
+        assertTrue(targetDateRecordFound, '更新レコードがある場合、対象日のデータがDaily_Summaryに存在すべき');
+        assertTrue(targetDateRecords >= result.summaryResult.recordsUpdated, 
+                  '対象日のレコード数は更新レコード数以上であるべき');
+      }
+    }
+    
+    // 4. 実行時間の確認（クォータ制限内）
     assertTrue(executionTime < 60000, 'dailyJobは1分以内に完了すべき（実際: ' + executionTime + 'ms）');
+    
+    console.log('✓ Daily_Summary更新確認: 対象日レコード数=' + targetDateRecords + 
+               ', 更新件数=' + (result.summaryResult ? result.summaryResult.recordsUpdated : 0));
     console.log('✓ dailyJob実行時間確認: ' + executionTime + 'ms');
     
   } catch (error) {
     throw new Error('dailyJob実行エラー: ' + error.message);
+  }
+}
+
+/**
+ * dailyJob関数: 実行時間測定テスト（パフォーマンス確認専用）
+ */
+function testDailyJob_PerformanceCheck_ExecutesWithinTimeLimit() {
+  // Red: dailyJobがクォータ制限内で実行されることを期待
+  
+  try {
+    // 実行時間測定のみに集中
+    var beforeExecution = new Date().getTime();
+    
+    // dailyJob関数の実行
+    var result = dailyJob();
+    
+    var afterExecution = new Date().getTime();
+    var executionTime = afterExecution - beforeExecution;
+    
+    // 基本的な戻り値確認
+    assertNotNull(result, 'dailyJob関数は戻り値を返すべき');
+    assertTrue(result.success, 'dailyJob関数は正常実行すべき');
+    
+    // 実行時間の確認（クォータ制限内）
+    assertTrue(executionTime < 60000, 'dailyJobは1分以内に完了すべき（実際: ' + executionTime + 'ms）');
+    
+    // パフォーマンス目標の確認（10秒以内推奨）
+    if (executionTime > 10000) {
+      console.log('⚠️ パフォーマンス注意: ' + executionTime + 'ms（推奨10秒以内）');
+    } else {
+      console.log('✓ パフォーマンス良好: ' + executionTime + 'ms');
+    }
+    
+    console.log('✓ dailyJob実行時間測定完了: ' + executionTime + 'ms');
+    
+  } catch (error) {
+    throw new Error('dailyJobパフォーマンステスト実行エラー: ' + error.message);
   }
 }
 
@@ -80,17 +198,81 @@ function testDailyJob_HasUnfinishedClockOut_SendsEmail() {
   // Red: 未退勤者がいる場合、一覧メールが送信されることを期待
   
   try {
-    // このテストは実際のメール送信をモックまたはテストモードで実行
-    // 現段階では関数の正常実行を確認
+    // テストモードの確認
+    var isTestMode = getTestModeConfig('EMAIL_MOCK_ENABLED');
+    assertTrue(isTestMode, 'テスト実行時はメールモックモードが有効であるべき');
     
+    // モックデータをクリア
+    clearMockEmailData();
+    
+    // dailyJob実行前のモックデータ状態を確認
+    var beforeMockData = getMockEmailData();
+    var beforeEmailCount = Object.keys(beforeMockData).length;
+    
+    // dailyJob関数の実行
     var result = dailyJob();
     
-    // 戻り値または実行状況の確認
-    assertTrue(result !== undefined, 'dailyJobは実行結果を返すべき');
-    console.log('✓ dailyJob未退勤者チェック実行確認');
+    // 1. 基本的な戻り値検証
+    assertNotNull(result, 'dailyJob関数は戻り値を返すべき');
+    assertTrue(typeof result === 'object', 'dailyJob関数の戻り値はオブジェクトであるべき');
+    assertTrue('success' in result, 'dailyJob関数の戻り値にsuccessプロパティがあるべき');
+    assertTrue('emailResult' in result, 'dailyJob関数の戻り値にemailResultプロパティがあるべき');
+    assertTrue(result.success, 'dailyJob関数は正常実行時にsuccess: trueを返すべき');
+    
+    // 2. emailResultの詳細検証
+    if (result.emailResult) {
+      assertTrue(typeof result.emailResult === 'object', 'emailResultはオブジェクトであるべき');
+      assertTrue('unfinishedCount' in result.emailResult, 'emailResultにunfinishedCountがあるべき');
+      assertTrue(typeof result.emailResult.unfinishedCount === 'number', 'unfinishedCountは数値であるべき');
+      
+      // 3. モックメール送信の検証
+      var afterMockData = getMockEmailData();
+      var afterEmailCount = Object.keys(afterMockData).length;
+      
+      if (result.emailResult.unfinishedCount > 0) {
+        // 未退勤者がいる場合：メール送信が行われるべき
+        assertTrue(afterEmailCount > beforeEmailCount, '未退勤者がいる場合、メール送信記録があるべき');
+        
+        // 送信されたメール情報の詳細検証
+        var emailKeys = Object.keys(afterMockData);
+        var latestEmailKey = emailKeys[emailKeys.length - 1];
+        var mockEmail = afterMockData[latestEmailKey];
+        
+        // メール内容の検証
+        assertTrue(mockEmail.type === 'unfinished_clockout', 'メールタイプが未退勤者メールであるべき');
+        assertTrue(Array.isArray(mockEmail.recipients), 'recipients配列が存在すべき');
+        assertTrue(mockEmail.recipients.length > 0, '送信先が設定されているべき');
+        assertTrue(typeof mockEmail.subject === 'string', '件名が文字列であるべき');
+        assertTrue(mockEmail.subject.indexOf('未退勤者一覧') !== -1, '件名に「未退勤者一覧」が含まれるべき');
+        assertTrue(typeof mockEmail.body === 'string', '本文が文字列であるべき');
+        assertTrue(mockEmail.body.length > 0, '本文が空でないべき');
+        assertTrue(Array.isArray(mockEmail.unfinishedEmployees), '未退勤者配列が存在すべき');
+        assertTrue(mockEmail.unfinishedEmployees.length === result.emailResult.unfinishedCount, 
+                  '未退勤者数とメール内容が一致すべき');
+        
+        // 各未退勤者情報の検証
+        mockEmail.unfinishedEmployees.forEach(function(emp, index) {
+          assertTrue('id' in emp, '未退勤者' + (index + 1) + 'にIDがあるべき');
+          assertTrue('name' in emp, '未退勤者' + (index + 1) + 'に名前があるべき');
+          assertTrue('department' in emp, '未退勤者' + (index + 1) + 'に部署があるべき');
+          assertTrue(typeof emp.id === 'string' && emp.id.length > 0, '未退勤者' + (index + 1) + 'のIDが有効であるべき');
+          assertTrue(typeof emp.name === 'string' && emp.name.length > 0, '未退勤者' + (index + 1) + 'の名前が有効であるべき');
+        });
+        
+        console.log('✓ 未退勤者メール送信確認: ' + result.emailResult.unfinishedCount + '名、メールID=' + latestEmailKey);
+        console.log('✓ 件名: ' + mockEmail.subject);
+        console.log('✓ 送信先: ' + mockEmail.recipients.join(', '));
+        
+      } else {
+        // 未退勤者がいない場合：メール送信は行われないべき
+        console.log('✓ 未退勤者なし: メール送信スキップ確認');
+      }
+    }
+    
+    console.log('✓ dailyJob未退勤者メール送信テスト完了');
     
   } catch (error) {
-    throw new Error('dailyJob未退勤者処理エラー: ' + error.message);
+    throw new Error('dailyJob未退勤者メール送信テスト実行エラー: ' + error.message);
   }
 }
 
