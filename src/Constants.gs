@@ -338,6 +338,22 @@ function buildEmailTemplate(type, params) {
   if (!def) throw new Error('Unknown email template type: ' + type);
   var subject = def.subject;
   var body = def.body;
+  // 必須パラメータチェック
+  var requiredKeys = [];
+  var keyRegex = /{(\w+)}/g;
+  var match;
+  while ((match = keyRegex.exec(subject)) !== null) {
+    requiredKeys.push(match[1]);
+  }
+  keyRegex.lastIndex = 0;
+  while ((match = keyRegex.exec(body)) !== null) {
+    requiredKeys.push(match[1]);
+  }
+  requiredKeys = Array.from(new Set(requiredKeys));
+  var missing = requiredKeys.filter(function(key) { return !(key in params); });
+  if (missing.length > 0) {
+    throw new Error('buildEmailTemplate: missing required params: ' + missing.join(', '));
+  }
   Object.keys(params).forEach(function(key) {
     var re = new RegExp('{' + key + '}', 'g');
     subject = subject.replace(re, params[key]);

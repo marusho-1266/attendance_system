@@ -40,7 +40,7 @@ function sendUnfinishedClockOutEmail_MailManager(unfinishedEmployees, targetDate
     }
     
     // メールテンプレート生成
-    var template = generateUnfinishedClockOutEmailTemplate(unfinishedEmployees[0], targetDate);
+    var template = generateUnfinishedClockOutEmailTemplate(unfinishedEmployees, targetDate);
     
     // モックモードの確認
     if (isEmailMockMode()) {
@@ -69,18 +69,25 @@ function sendUnfinishedClockOutEmail_MailManager(unfinishedEmployees, targetDate
       return ret;
     } else {
       // 実際のメール送信
-      GmailApp.sendEmail(adminEmails.join(','), template.subject, template.body);
-      
-      // 送信件数を記録
-      incrementTodayEmailCount(1);
-      
-      var ret = {
-        success: true,
-        sentCount: adminEmails.length,
-        message: '送信完了'
-      };
-      console.log('sendUnfinishedClockOutEmail_MailManager return:', JSON.stringify(ret));
-      return ret;
+      try {
+        GmailApp.sendEmail(adminEmails.join(','), template.subject, template.body);
+        // 送信件数を記録
+        incrementTodayEmailCount(1);
+        var ret = {
+          success: true,
+          sentCount: adminEmails.length,
+          message: '送信完了'
+        };
+        console.log('sendUnfinishedClockOutEmail_MailManager return:', JSON.stringify(ret));
+        return ret;
+      } catch (sendError) {
+        console.log('GmailApp.sendEmail送信エラー: ' + sendError.message);
+        return {
+          success: false,
+          sentCount: 0,
+          message: 'メール送信失敗: ' + sendError.message
+        };
+      }
     }
     
   } catch (error) {
@@ -166,17 +173,18 @@ function sendMonthlyReportEmail_MailManager(reportData, adminEmails) {
 
 /**
  * 未退勤者メールテンプレート生成
- * @param {Object} employee - 従業員情報
+ * @param {Array} employees - 未退勤従業員リスト
  * @param {Date} targetDate - 対象日
  * @return {Object} メールテンプレート
  */
-function generateUnfinishedClockOutEmailTemplate(employee, targetDate) {
+function generateUnfinishedClockOutEmailTemplate(employees, targetDate) {
   var dateStr = formatDate(targetDate);
+  var employeeListStr = employees.map(function(emp, idx) {
+    return (idx + 1) + '. ' + emp.employeeName + '（出勤: ' + emp.clockInTime + ' / 現在: ' + emp.currentTime + '）';
+  }).join('\n');
   var params = {
-    name: employee.employeeName,
+    employeeList: employeeListStr,
     date: dateStr,
-    clockInTime: employee.clockInTime,
-    currentTime: employee.currentTime,
     systemName: getEmailTemplate('UNFINISHED_CLOCKOUT', 'SYSTEM_NAME'),
     formInstruction: getEmailTemplate('UNFINISHED_CLOCKOUT', 'FORM_INSTRUCTION'),
     autoSendNotice: getEmailTemplate('UNFINISHED_CLOCKOUT', 'AUTO_SEND_NOTICE'),
@@ -209,19 +217,17 @@ function generateMonthlyReportEmailTemplate(reportData) {
 /**
  * メール送信クォータチェック
  * @param {number} sendCount - 送信予定件数
+ * @param {number} [quotaOverride] - （テスト用）クォータ値を上書き
  * @return {boolean} 送信可能な場合true
  */
-function checkEmailQuota(sendCount) {
+function checkEmailQuota(sendCount, quotaOverride) {
   try {
     if (!sendCount || sendCount <= 0) {
       return true;
     }
-    
-    var dailyQuota = getEmailConfig('EMAIL_DAILY_QUOTA');
+    var dailyQuota = (typeof quotaOverride === 'number') ? quotaOverride : getEmailConfig('EMAIL_DAILY_QUOTA');
     var usedQuota = getTodayEmailCount();
-    
     return (usedQuota + sendCount) <= dailyQuota;
-    
   } catch (error) {
     console.log('クォータチェックエラー: ' + error.message);
     return false;
@@ -230,16 +236,10 @@ function checkEmailQuota(sendCount) {
 
 /**
  * クォータ値取得ユーティリティ
+ * @param {number} [quotaOverride] - （テスト用）クォータ値を上書き
  */
-function getEmailQuotaValue() {
-  return getEmailConfig('EMAIL_DAILY_QUOTA');
-}
-
-/**
- * テスト用: クォータ値を一時的に上書き
- */
-function setEmailQuotaValueForTest(value) {
-  EMAIL_MODE_CONFIG.EMAIL_DAILY_QUOTA = value;
+function getEmailQuotaValue(quotaOverride) {
+  return (typeof quotaOverride === 'number') ? quotaOverride : getEmailConfig('EMAIL_DAILY_QUOTA');
 }
 
 /**

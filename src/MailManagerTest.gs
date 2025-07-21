@@ -12,19 +12,47 @@
 
 /**
  * テスト用のAPP_CONFIG初期化
+ * @param {Object} [options] - テスト用設定値（ADMIN_EMAILS, EMAIL_DAILY_QUOTA など）
  */
-function initializeTestAppConfig() {
+function initializeTestAppConfig(options) {
+  // 既存値のバックアップ
+  this._original_APP_CONFIG = typeof APP_CONFIG !== 'undefined' ? JSON.parse(JSON.stringify(APP_CONFIG)) : undefined;
+  this._original_getTestModeConfig = typeof getTestModeConfig !== 'undefined' ? getTestModeConfig : undefined;
+  this._original_emailMode = typeof EMAIL_MODE_CONFIG !== 'undefined' ? EMAIL_MODE_CONFIG.EMAIL_SEND_MODE : undefined;
+
   if (typeof APP_CONFIG === 'undefined') {
     APP_CONFIG = {};
   }
-  APP_CONFIG['ADMIN_EMAILS'] = ['manager@example.com', 'hr@example.com'];
-  APP_CONFIG['EMAIL_DAILY_QUOTA'] = 100;
+  APP_CONFIG['ADMIN_EMAILS'] = (options && options.ADMIN_EMAILS) || ['manager@example.com', 'hr@example.com'];
+  APP_CONFIG['EMAIL_DAILY_QUOTA'] = (options && options.EMAIL_DAILY_QUOTA) || 100;
   // getTestModeConfigのダミー化
-  globalThis.getTestModeConfig = function() { return false; };
-  
+  this.getTestModeConfig = function() { return false; };
+  // グローバルへ明示的に定義
+  if (typeof getTestModeConfig === 'undefined') {
+    getTestModeConfig = this.getTestModeConfig;
+  } else {
+    getTestModeConfig = this.getTestModeConfig;
+  }
   // メールモードを必ずMOCKに設定
   setEmailMode('MOCK');
   clearMockEmailData();
+}
+
+/**
+ * テスト用のAPP_CONFIG/グローバル状態のクリーンアップ
+ */
+function teardownTestAppConfig() {
+  if (typeof this._original_APP_CONFIG !== 'undefined') {
+    APP_CONFIG = JSON.parse(JSON.stringify(this._original_APP_CONFIG));
+  }
+  if (typeof this._original_getTestModeConfig !== 'undefined') {
+    getTestModeConfig = this._original_getTestModeConfig;
+  } else {
+    try { delete getTestModeConfig; } catch(e) {}
+  }
+  if (typeof this._original_emailMode !== 'undefined' && typeof EMAIL_MODE_CONFIG !== 'undefined') {
+    EMAIL_MODE_CONFIG.EMAIL_SEND_MODE = this._original_emailMode;
+  }
 }
 
 /**
