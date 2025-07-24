@@ -390,5 +390,7 @@ function getPermissionAction(actionType) {
  * @returns {boolean}
  */
 function getTestModeConfig(key) {
-  return false;
+  // システム設定からテストモードを取得
+  var testMode = getSystemConfig('TEST_MODE');
+  return testMode === 'true' || testMode === true;
 }

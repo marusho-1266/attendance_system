@@ -447,10 +447,9 @@ function checkAndSendUnfinishedClockOutEmail() {
       var emp = employeeMap[employeeId];
       if (emp.hasClockIn && !emp.hasClockOut) {
         // テンプレート用プロパティを付与
-        emp.clockInTime = '09:00';
-        emp.currentTime = '18:30';
+        emp.clockInTime = getEmployeeClockInTime(emp.id, targetDate) || '';
+        emp.currentTime = getEmployeeStandardEndTimeOrNow(emp.id) || '';
         emp.employeeName = emp.name;
-        emp.name = emp.name || emp.employeeName;
         unfinishedEmployees.push(emp);
       }
     });
@@ -889,5 +888,65 @@ function showHelp() {
     
   } catch (error) {
     console.log('ヘルプ表示エラー: ' + error.message);
+  }
+} 
+
+/**
+ * 指定日・従業員IDの出勤時刻（最初のIN打刻）を取得
+ * @param {string} employeeId
+ * @param {string} dateStr (yyyy-MM-dd)
+ * @return {string|null} HH:MM形式 or null
+ */
+function getEmployeeClockInTime(employeeId, dateStr) {
+  try {
+    var logRawSheet = getOrCreateSheet(getSheetName('LOG_RAW'));
+    var logData = logRawSheet.getDataRange().getValues();
+    for (var i = 1; i < logData.length; i++) {
+      var row = logData[i];
+      var rowEmployeeId = row[getColumnIndex('LOG_RAW', 'EMPLOYEE_ID')];
+      var action = row[getColumnIndex('LOG_RAW', 'ACTION')];
+      var timestamp = row[getColumnIndex('LOG_RAW', 'TIMESTAMP')];
+      if (!timestamp || typeof timestamp !== 'object') continue;
+      var logDate = formatDate(timestamp);
+      if (
+        rowEmployeeId === employeeId &&
+        logDate === dateStr &&
+        action === getActionConstant('CLOCK_IN')
+      ) {
+        return formatTime(timestamp);
+      }
+    }
+    return null;
+  } catch (e) {
+    console.log('getEmployeeClockInTime error: ' + e.message);
+    return null;
+  }
+}
+
+/**
+ * 従業員の標準終業時刻（Master_Employee）を取得。なければ現在時刻を返す
+ * @param {string} employeeId
+ * @return {string} HH:MM形式
+ */
+function getEmployeeStandardEndTimeOrNow(employeeId) {
+  try {
+    var employeeSheet = getOrCreateSheet(getSheetName('MASTER_EMPLOYEE'));
+    var data = employeeSheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i];
+      if (row[getColumnIndex('EMPLOYEE', 'EMPLOYEE_ID')] === employeeId) {
+        var endTime = row[getColumnIndex('EMPLOYEE', 'END_TIME')];
+        if (endTime && typeof endTime === 'string' && endTime.match(/^\d{1,2}:\d{2}$/)) {
+          return endTime;
+        }
+      }
+    }
+    // 標準終業時刻がなければ現在時刻
+    var now = new Date();
+    return formatTime(now);
+  } catch (e) {
+    console.log('getEmployeeStandardEndTimeOrNow error: ' + e.message);
+    var now = new Date();
+    return formatTime(now);
   }
 } 
