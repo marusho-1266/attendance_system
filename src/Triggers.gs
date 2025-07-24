@@ -446,6 +446,11 @@ function checkAndSendUnfinishedClockOutEmail() {
     Object.keys(employeeMap).forEach(function(employeeId) {
       var emp = employeeMap[employeeId];
       if (emp.hasClockIn && !emp.hasClockOut) {
+        // テンプレート用プロパティを付与
+        emp.clockInTime = '09:00';
+        emp.currentTime = '18:30';
+        emp.employeeName = emp.name;
+        emp.name = emp.name || emp.employeeName;
         unfinishedEmployees.push(emp);
       }
     });

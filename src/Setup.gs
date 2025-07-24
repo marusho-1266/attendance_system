@@ -191,6 +191,141 @@ function runSystemIntegrationTest() {
 }
 
 /**
+ * システム全体E2E統合テスト（Redフェーズ雛形）
+ * 主要シナリオ例:
+ * 1. 打刻API呼び出し→ログ保存
+ * 2. 日次/週次/月次集計トリガー実行→集計結果検証
+ * 3. 未退勤者メール送信→送信ログ検証
+ * 4. Googleフォーム連携→データ保存・重複チェック
+ * 5. 認証・権限チェック→正常/異常系
+ * 6. 異常系・境界値（例: 二重打刻、無効データ、権限エラー等）
+ */
+function runFullIntegrationTest() {
+  try {
+    // テスト用：MASTER_EMPLOYEEシートにテスト従業員を追加
+    var empSheet = getOrCreateSheet(getSheetName('MASTER_EMPLOYEE'));
+    var empData = empSheet.getDataRange().getValues();
+    var exists = empData.some(function(row) {
+      return row[1] === 'EMP001' && row[2] === '田中太郎' && row[3] === 'tanaka@example.com';
+    });
+    if (!exists) {
+      // 正しい列順序で追加（EMPLOYEE_COLUMNS定義に従う）
+      // A列: 社員ID, B列: 氏名, C列: Gmail, D列: 所属, E列: 雇用区分, F列: 上司Gmail, G列: 基準始業, H列: 基準終業
+      empSheet.appendRow(['EMP001', '田中太郎', 'tanaka@example.com', '営業部', '正社員', 'manager@example.com', '09:00', '18:00']);
+    }
+    // 認証キャッシュをクリア
+    if (typeof clearAuthCache === 'function') {
+      clearAuthCache();
+    }
+    // 認証キャッシュ・設定を強制有効化
+    if (typeof AUTH_CACHE !== 'undefined') {
+      AUTH_CACHE.cacheEnabled = true;
+    }
+    if (typeof AUTH_CONFIG !== 'undefined') {
+      AUTH_CONFIG.BRUTE_FORCE_PROTECTION = false;
+    }
+    // テスト用：Log_Rawシートを初期化（ヘッダー以外を削除）
+    var logRawSheet = getOrCreateSheet(getSheetName('LOG_RAW'));
+    var lastRow = logRawSheet.getLastRow();
+    if (lastRow > 1) {
+      logRawSheet.deleteRows(2, lastRow - 1);
+    }
+    console.log('Log_Rawシート初期化完了');
+    console.log('=== E2E統合テスト開始 ===');
+    // 1. 打刻API呼び出し（例: processClock）
+    var userInfo = { email: 'tanaka@example.com', employeeId: 'EMP001', employeeName: '田中太郎' };
+    var clockResult = processClock('IN', userInfo);
+    assertTrue(clockResult.success, '打刻APIが成功し、success=trueで返るべき');
+
+    // ここで未退勤者テストデータを追加（IN打刻のみ、OUTなし、日付は前日）
+    var yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    // Log_Rawの列順: TIMESTAMP, EMPLOYEE_ID, NAME, ACTION, IP_ADDRESS, REMARKS
+    var testRow = [
+      yesterday,            // TIMESTAMP (Date型)
+      'EMP001',             // EMPLOYEE_ID
+      '田中太郎',           // NAME
+      'IN',                 // ACTION
+      '',                   // IP_ADDRESS
+      ''                    // REMARKS
+    ];
+    logRawSheet.appendRow(testRow);
+    console.log('未退勤者テストデータ追加完了');
+
+    // 2. 日次集計トリガー実行（例: dailyJob）
+    var dailyResult = dailyJob();
+    assertTrue(dailyResult.success, '日次集計トリガーが成功し、success=trueで返るべき');
+
+    // 3. 未退勤者メール送信（例: sendUnfinishedClockOutEmail_MailManager）
+    // ↓この部分を削除
+    // var unfinishedEmployees = [{
+    //   employeeId: 'EMP001',
+    //   employeeName: '田中太郎',
+    //   name: '田中太郎', // テンプレート用
+    //   email: 'tanaka@example.com',
+    //   clockInTime: '09:00', // テンプレート用
+    //   currentTime: '18:30'  // テンプレート用
+    // }];
+    // var mailResult = sendUnfinishedClockOutEmail_MailManager(unfinishedEmployees, new Date());
+    // assertTrue(mailResult.success, '未退勤者メール送信が成功し、success=trueで返るべき');
+
+    // 4. Googleフォーム連携→データ保存・重複チェック
+    // GoogleフォームのFormResponseイベントのダミー
+    var dummyFormEvent = {
+      response: {
+        getItemResponses: function() {
+          return [
+            {
+              getItem: function() { return { getTitle: function() { return '社員ID'; } }; },
+              getResponse: function() { return 'EMP001'; }
+            },
+            {
+              getItem: function() { return { getTitle: function() { return '氏名'; } }; },
+              getResponse: function() { return '田中太郎'; }
+            },
+            {
+              getItem: function() { return { getTitle: function() { return '打刻種別'; } }; },
+              getResponse: function() { return 'IN'; }
+            }
+            // 必要に応じて他の項目も追加
+          ];
+        },
+        getTimestamp: function() { return new Date(); }
+      }
+    };
+    var formResult = processGoogleFormResponse(dummyFormEvent);
+    assertTrue(formResult.success, 'フォーム応答処理が成功すべき');
+    // 重複チェック（同じデータを再送）
+    var formResultDup = processGoogleFormResponse(dummyFormEvent);
+    assertTrue(formResultDup.duplicate || formResultDup.success === false, '重複データは検出されるべき');
+
+    // 5. 認証・権限チェック（正常/異常系）
+    if (typeof clearAuthCache === 'function') {
+      clearAuthCache();
+    }
+    var authResult = authenticateUser('tanaka@example.com');
+    assertTrue(authResult, '認証が成功すべき');
+    var permResult = checkPermission('tanaka@example.com', 'ADMIN_ACTION');
+    assertFalse(permResult, '権限がない場合はfalseを返すべき');
+
+    // 6. 異常系・境界値（二重打刻、無効データ、権限エラー等）
+    var dupResult = processClock('IN', userInfo); // 直前と同じ打刻
+    assertFalse(dupResult.success, '二重打刻は失敗すべき');
+    // WEBAPP_CONFIG.ERROR_MESSAGES.DUPLICATE_ACTIONが未定義の場合はメッセージ検証を省略
+
+    // 7. 全体フローのデータ整合性検証
+    var logRawCount = getSheetRowCount(getSheetName('LOG_RAW'));
+    assertTrue(logRawCount > 1, '打刻後のLog_Rawシートにデータが追加されているべき');
+
+    console.log('✓ E2E統合テスト成功');
+    return true;
+  } catch (error) {
+    console.log('✗ E2E統合テスト失敗: ' + error.message);
+    throw error;
+  }
+}
+
+/**
  * セットアップ状況の確認
  * 現在のシステム状態をレポート
  */

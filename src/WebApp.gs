@@ -611,7 +611,7 @@ function processClock(action, userInfo) {
     console.log('processClock: 処理開始', { action, email: userInfo.email });
     
     // Log_Rawシートの取得
-    const logRawSheet = getLogRawSheet();
+    const logRawSheet = getOrCreateSheet(getSheetName('LOG_RAW'));
     
     // 現在時刻の取得
     const now = new Date();
@@ -644,7 +644,7 @@ function processClock(action, userInfo) {
 }
 
 /**
- * 重複アクションのチェック
+ * 重複アクションのチェック（全行走査版）
  * @param {Sheet} logRawSheet - Log_Rawシート
  * @param {string} action - アクション
  * @param {string} email - メールアドレス
@@ -653,31 +653,27 @@ function processClock(action, userInfo) {
  */
 function checkDuplicateAction(logRawSheet, action, email, now) {
   try {
-    const lastRow = logRawSheet.getLastRow();
-    
-    if (lastRow <= 1) {
+    const data = logRawSheet.getDataRange().getValues();
+    if (data.length <= 1) {
       // ヘッダー行のみの場合は重複なし
       return { isValid: true };
     }
-    
-    // 最後の行のデータを取得
-    const lastRowData = logRawSheet.getRange(lastRow, 1, 1, 7).getValues()[0];
-    const [lastTimestamp, lastEmail, , , lastAction] = lastRowData;
-    
-    // 同一ユーザーの同一アクションチェック
-    if (lastEmail === email && lastAction === action) {
-      const timeDiff = (now.getTime() - new Date(lastTimestamp).getTime()) / (1000 * 60);
-      
-      if (timeDiff < WEBAPP_CONFIG.DUPLICATE_CHECK_MINUTES) {
-        return {
-          isValid: false,
-          error: WEBAPP_CONFIG.ERROR_MESSAGES.DUPLICATE_ACTION
-        };
+    // 逆順で全行を走査（新しい順）
+    for (let i = data.length - 1; i >= 1; i--) {
+      const row = data[i];
+      const [timestamp, rowEmail, , , rowAction] = row;
+      if (rowEmail === email && rowAction === action) {
+        const timeDiff = (now.getTime() - new Date(timestamp).getTime()) / (1000 * 60);
+        // 同一日かつ5分以内
+        if (formatDate(now) === formatDate(new Date(timestamp)) && timeDiff < WEBAPP_CONFIG.DUPLICATE_CHECK_MINUTES) {
+          return {
+            isValid: false,
+            error: WEBAPP_CONFIG.ERROR_MESSAGES.DUPLICATE_ACTION
+          };
+        }
       }
     }
-    
     return { isValid: true };
-    
   } catch (error) {
     console.warn('重複チェックエラー（処理継続）:', error);
     return { isValid: true }; // エラーが発生した場合は処理を継続

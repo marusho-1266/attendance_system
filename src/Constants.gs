@@ -366,10 +366,12 @@ function buildEmailTemplate(type, params) {
  * アプリケーション設定取得関数（TDD対象）
  */
 function getAppConfig(configKey) {
-  if (!APP_CONFIG.hasOwnProperty(configKey)) {
-    throw new Error('Unknown config key: ' + configKey);
+  var value = getSystemConfig(configKey);
+  if (configKey === 'ADMIN_EMAILS' && typeof value === 'string') {
+    // カンマ区切り文字列を配列に変換
+    return value.split(',').map(function(email) { return email.trim(); }).filter(function(email) { return email.length > 0; });
   }
-  return APP_CONFIG[configKey];
+  return value;
 }
 
 /**
@@ -380,4 +382,13 @@ function getPermissionAction(actionType) {
     throw new Error('Unknown permission action type: ' + actionType);
   }
   return PERMISSION_ACTIONS[actionType];
+}
+
+/**
+ * テストモード設定取得関数（常にfalse: 本番モード）
+ * @param {string} key
+ * @returns {boolean}
+ */
+function getTestModeConfig(key) {
+  return false;
 }
