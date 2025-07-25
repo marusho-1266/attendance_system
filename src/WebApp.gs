@@ -39,6 +39,19 @@ function doGet(e) {
     
     // 認証チェック
     const userInfo = authenticateWebAppUser();
+    // 追加ログ出力
+    if (userInfo) {
+      console.log('doGet: userInfo', JSON.stringify(userInfo));
+    } else {
+      console.log('doGet: userInfo is null');
+    }
+    // 管理者リストのログ出力
+    try {
+      var managers = (typeof getManagerEmails === 'function') ? getManagerEmails() : [];
+      console.log('doGet: 管理者リスト', JSON.stringify(managers));
+    } catch (err) {
+      console.log('doGet: 管理者リスト取得エラー', err.message);
+    }
     
     if (!userInfo || !userInfo.isAuthenticated) {
       console.log('doGet: 認証失敗');
@@ -113,10 +126,20 @@ function doPost(e) {
  */
 function authenticateWebAppUser() {
   try {
-    return authenticateUser();
+    var activeUser = Session.getActiveUser();
+    var email = (activeUser && activeUser.getEmail) ? activeUser.getEmail() : null;
+    if (!email) return { isAuthenticated: false, email: null };
+    var isAuthenticated = authenticateUser(email);
+    var employeeInfo = isAuthenticated ? getCachedEmployee(email) : null;
+    return {
+      isAuthenticated: isAuthenticated,
+      email: email,
+      name: employeeInfo ? employeeInfo.name : undefined,
+      employeeId: employeeInfo ? employeeInfo.employeeId : undefined
+    };
   } catch (error) {
     console.error('WebApp認証エラー:', error);
-    return null;
+    return { isAuthenticated: false, email: null };
   }
 }
 
