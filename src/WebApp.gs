@@ -126,8 +126,7 @@ function doPost(e) {
  */
 function authenticateWebAppUser() {
   try {
-    var activeUser = Session.getActiveUser();
-    var email = (activeUser && activeUser.getEmail) ? activeUser.getEmail() : null;
+    var email = Session.getActiveUser().getEmail();
     if (!email) return { isAuthenticated: false, email: null };
     var isAuthenticated = authenticateUser(email);
     var employeeInfo = isAuthenticated ? getCachedEmployee(email) : null;
