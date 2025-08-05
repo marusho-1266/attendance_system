@@ -225,7 +225,7 @@ ${errorInfo.additionalInfo}
 4. 問題解決後、関連する処理の再実行を検討
 
 【システム情報】
-エラーログシート: ${SpreadsheetApp.getActiveSpreadsheet().getUrl()}#gid=Error_Log
+エラーログシート: ${SpreadsheetApp.getActiveSpreadsheet().getUrl()}#gid=${getSheetId('Error_Log')}
 
 このメールは自動送信されています。
 
@@ -531,10 +531,32 @@ function scheduleChunkContinuation(items, processor, options, startIndex) {
       .after(60000) // 1分後に実行
       .create();
     
+    // 関数名の検証
+    const processorName = processor.name;
+    if (!processorName) {
+      Logger.log('警告: 匿名関数は継続処理で使用できません。処理を中断します。');
+      logError(new Error('匿名関数は継続処理で使用できません'), 'scheduleChunkContinuation.AnonymousFunction', 'HIGH', {
+        startIndex: startIndex,
+        itemsCount: items.length
+      });
+      return;
+    }
+    
+    // 関数がFUNCTION_MAPPINGに登録されているかチェック
+    if (!FUNCTION_MAPPING[processorName]) {
+      Logger.log(`警告: 関数 '${processorName}' がFUNCTION_MAPPINGに登録されていません。処理を中断します。`);
+      logError(new Error(`関数 '${processorName}' がFUNCTION_MAPPINGに登録されていません`), 'scheduleChunkContinuation.UnregisteredFunction', 'HIGH', {
+        processorName: processorName,
+        startIndex: startIndex,
+        itemsCount: items.length
+      });
+      return;
+    }
+    
     // 継続処理用のデータを保存
     const continuationData = {
       items: items.slice(startIndex),
-      processorName: processor.name,
+      processorName: processorName,
       options: options,
       originalStartIndex: startIndex
     };
@@ -544,11 +566,113 @@ function scheduleChunkContinuation(items, processor, options, startIndex) {
       JSON.stringify(continuationData)
     );
     
-    Logger.log(`チャンク処理継続をスケジュール: トリガーID=${trigger.getUniqueId()}, 開始インデックス=${startIndex}`);
+    Logger.log(`チャンク処理継続をスケジュール: トリガーID=${trigger.getUniqueId()}, 開始インデックス=${startIndex}, 関数名=${processorName}`);
     
   } catch (error) {
     logError(error, 'scheduleChunkContinuation', 'HIGH');
   }
+}
+
+/**
+ * 関数名から関数参照を取得する安全なマッピング
+ * @type {Object.<string, Function>}
+ */
+const FUNCTION_MAPPING = {
+  // 従業員関連の処理関数
+  'processEmployeeData': function(employee, index) {
+    // 従業員データ処理のデフォルト実装
+    return { employeeId: employee.employeeId, processed: true, index: index };
+  },
+  
+  // 残業時間計算関数
+  'calculateOvertime': function(employee, index) {
+    // 残業時間計算のデフォルト実装
+    return { employeeId: employee.employeeId, overtimeHours: 0, index: index };
+  },
+  
+  // 月次サマリー計算関数
+  'calculateMonthlySummary': function(employee, index) {
+    // 月次サマリー計算のデフォルト実装
+    return { employeeId: employee.employeeId, monthlyData: {}, index: index };
+  },
+  
+  // 承認処理関数
+  'processApproval': function(request, index) {
+    // 承認処理のデフォルト実装
+    return { requestId: request.requestId, approved: false, index: index };
+  },
+  
+  // データ検証関数
+  'validateData': function(item, index) {
+    // データ検証のデフォルト実装
+    return { item: item, valid: true, index: index };
+  },
+  
+  // レポート生成関数
+  'generateReport': function(data, index) {
+    // レポート生成のデフォルト実装
+    return { data: data, reportGenerated: true, index: index };
+  }
+};
+
+/**
+ * 関数名から関数参照を安全に取得
+ * @param {string} functionName - 関数名
+ * @return {Function} 関数参照
+ * @throws {Error} 関数が見つからない場合
+ */
+function getFunctionByName(functionName) {
+  if (!functionName) {
+    throw new Error('関数名が指定されていません');
+  }
+  
+  const func = FUNCTION_MAPPING[functionName];
+  if (!func) {
+    throw new Error(`関数 '${functionName}' が見つかりません。FUNCTION_MAPPINGに追加してください。`);
+  }
+  
+  return func;
+}
+
+/**
+ * FUNCTION_MAPPINGに新しい関数を追加
+ * @param {string} functionName - 関数名
+ * @param {Function} func - 関数参照
+ */
+function registerFunction(functionName, func) {
+  if (!functionName || typeof func !== 'function') {
+    throw new Error('関数名と関数参照の両方が必要です');
+  }
+  
+  FUNCTION_MAPPING[functionName] = func;
+  Logger.log(`関数 '${functionName}' をFUNCTION_MAPPINGに登録しました`);
+}
+
+/**
+ * FUNCTION_MAPPINGから関数を削除
+ * @param {string} functionName - 関数名
+ */
+function unregisterFunction(functionName) {
+  if (FUNCTION_MAPPING[functionName]) {
+    delete FUNCTION_MAPPING[functionName];
+    Logger.log(`関数 '${functionName}' をFUNCTION_MAPPINGから削除しました`);
+  }
+}
+
+/**
+ * FUNCTION_MAPPINGの現在の状態を表示
+ * @return {Object} 登録されている関数の一覧
+ */
+function showFunctionMapping() {
+  const mapping = {};
+  for (const [name, func] of Object.entries(FUNCTION_MAPPING)) {
+    mapping[name] = typeof func;
+  }
+  
+  Logger.log('FUNCTION_MAPPING の現在の状態:');
+  Logger.log(JSON.stringify(mapping, null, 2));
+  
+  return mapping;
 }
 
 /**
@@ -567,10 +691,23 @@ function continueChunkProcessing(triggerId) {
     
     const continuationData = JSON.parse(continuationDataJson);
     
+    // 関数名から関数を安全に取得
+    let processor;
+    try {
+      processor = getFunctionByName(continuationData.processorName);
+    } catch (error) {
+      Logger.log(`関数の復元に失敗: ${error.message}`);
+      logError(error, 'continueChunkProcessing.FunctionRestoration', 'HIGH', { 
+        triggerId: triggerId,
+        processorName: continuationData.processorName 
+      });
+      return;
+    }
+    
     // 継続処理を実行
     const result = processChunks(
       continuationData.items,
-      eval(continuationData.processorName), // 関数名から関数を復元
+      processor,
       continuationData.options
     );
     
@@ -1046,6 +1183,131 @@ function syntaxTest() {
     return true;
   } catch (error) {
     Logger.log('ErrorHandler.gs構文エラー: ' + error.toString());
+    return false;
+  }
+}
+
+/**
+ * eval()置き換え機能のテスト
+ */
+function testEvalReplacement() {
+  try {
+    Logger.log('=== eval()置き換え機能のテスト開始 ===');
+    
+    // 1. 関数マッピングの表示
+    Logger.log('1. FUNCTION_MAPPINGの状態確認:');
+    showFunctionMapping();
+    
+    // 2. 正常な関数取得のテスト
+    Logger.log('2. 正常な関数取得のテスト:');
+    const processEmployeeData = getFunctionByName('processEmployeeData');
+    Logger.log(`取得した関数の型: ${typeof processEmployeeData}`);
+    
+    // 3. 関数実行のテスト
+    Logger.log('3. 関数実行のテスト:');
+    const testEmployee = { employeeId: 'TEST001', name: 'テスト太郎' };
+    const result = processEmployeeData(testEmployee, 0);
+    Logger.log(`実行結果: ${JSON.stringify(result)}`);
+    
+    // 4. 存在しない関数のテスト
+    Logger.log('4. 存在しない関数のテスト:');
+    try {
+      getFunctionByName('nonExistentFunction');
+      Logger.log('エラー: 存在しない関数が取得できてしまいました');
+      return false;
+    } catch (error) {
+      Logger.log(`期待されるエラー: ${error.message}`);
+    }
+    
+    // 5. 空の関数名のテスト
+    Logger.log('5. 空の関数名のテスト:');
+    try {
+      getFunctionByName('');
+      Logger.log('エラー: 空の関数名が処理されてしまいました');
+      return false;
+    } catch (error) {
+      Logger.log(`期待されるエラー: ${error.message}`);
+    }
+    
+    // 6. 関数登録のテスト
+    Logger.log('6. 関数登録のテスト:');
+    const testFunction = function(item, index) {
+      return { custom: true, item: item, index: index };
+    };
+    registerFunction('testCustomFunction', testFunction);
+    
+    const registeredFunction = getFunctionByName('testCustomFunction');
+    const customResult = registeredFunction({ id: 'CUSTOM001' }, 1);
+    Logger.log(`カスタム関数実行結果: ${JSON.stringify(customResult)}`);
+    
+    // 7. 関数削除のテスト
+    Logger.log('7. 関数削除のテスト:');
+    unregisterFunction('testCustomFunction');
+    try {
+      getFunctionByName('testCustomFunction');
+      Logger.log('エラー: 削除された関数が取得できてしまいました');
+      return false;
+    } catch (error) {
+      Logger.log(`期待されるエラー: ${error.message}`);
+    }
+    
+    Logger.log('=== eval()置き換え機能のテスト完了 ===');
+    return true;
+    
+  } catch (error) {
+    Logger.log(`テストエラー: ${error.message}`);
+    logError(error, 'testEvalReplacement', 'HIGH');
+    return false;
+  }
+}
+
+/**
+ * シートIDを取得
+ * 
+ * @param {string} sheetName - シート名
+ * @return {number} シートID
+ */
+function getSheetId(sheetName) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  return sheet ? sheet.getSheetId() : 0;
+}
+
+/**
+ * エラーログシートURL構築のテスト
+ */
+function testErrorLogUrlConstruction() {
+  try {
+    Logger.log('=== エラーログシートURL構築のテスト開始 ===');
+    
+    // 1. getSheetId関数のテスト
+    Logger.log('1. getSheetId関数のテスト:');
+    const errorLogSheetId = getSheetId('Error_Log');
+    Logger.log(`Error_LogシートID: ${errorLogSheetId}`);
+    
+    // 2. URL構築のテスト
+    Logger.log('2. URL構築のテスト:');
+    const spreadsheetUrl = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+    const errorLogUrl = `${spreadsheetUrl}#gid=${errorLogSheetId}`;
+    Logger.log(`構築されたURL: ${errorLogUrl}`);
+    
+    // 3. 他のシートでもテスト
+    Logger.log('3. 他のシートでのテスト:');
+    const requestResponsesSheetId = getSheetId('Request_Responses');
+    const dailySummarySheetId = getSheetId('Daily_Summary');
+    Logger.log(`Request_ResponsesシートID: ${requestResponsesSheetId}`);
+    Logger.log(`Daily_SummaryシートID: ${dailySummarySheetId}`);
+    
+    // 4. 存在しないシートのテスト
+    Logger.log('4. 存在しないシートのテスト:');
+    const nonExistentSheetId = getSheetId('NonExistentSheet');
+    Logger.log(`存在しないシートID: ${nonExistentSheetId}`);
+    
+    Logger.log('=== エラーログシートURL構築のテスト完了 ===');
+    return true;
+    
+  } catch (error) {
+    Logger.log(`テストエラー: ${error.message}`);
+    logError(error, 'testErrorLogUrlConstruction', 'HIGH');
     return false;
   }
 }

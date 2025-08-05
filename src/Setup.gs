@@ -11,6 +11,7 @@ function checkProjectStructure() {
   try {
     const result = {
       timestamp: new Date(),
+      success: true,
       modules: {},
       config: {},
       errors: []
@@ -138,6 +139,11 @@ function setupSpreadsheetStructure() {
  */
 function setupMasterEmployeeSheet(spreadsheet) {
   try {
+    // SHEET_CONFIGの存在チェック
+    if (typeof SHEET_CONFIG === 'undefined' || !SHEET_CONFIG.SHEETS) {
+      throw new Error('SHEET_CONFIGが定義されていないか、SHEETSプロパティが存在しません');
+    }
+    
     const sheetName = SHEET_CONFIG.SHEETS.MASTER_EMPLOYEE;
     let sheet = spreadsheet.getSheetByName(sheetName);
     
@@ -198,6 +204,11 @@ function setupMasterEmployeeSheet(spreadsheet) {
  */
 function setupMasterHolidaySheet(spreadsheet) {
   try {
+    // SHEET_CONFIGの存在チェック
+    if (typeof SHEET_CONFIG === 'undefined' || !SHEET_CONFIG.SHEETS) {
+      throw new Error('SHEET_CONFIGが定義されていないか、SHEETSプロパティが存在しません');
+    }
+    
     const sheetName = SHEET_CONFIG.SHEETS.MASTER_HOLIDAY;
     let sheet = spreadsheet.getSheetByName(sheetName);
     
@@ -255,6 +266,11 @@ function setupMasterHolidaySheet(spreadsheet) {
  */
 function setupLogRawSheet(spreadsheet) {
   try {
+    // SHEET_CONFIGの存在チェック
+    if (typeof SHEET_CONFIG === 'undefined' || !SHEET_CONFIG.SHEETS) {
+      throw new Error('SHEET_CONFIGが定義されていないか、SHEETSプロパティが存在しません');
+    }
+    
     const sheetName = SHEET_CONFIG.SHEETS.LOG_RAW;
     let sheet = spreadsheet.getSheetByName(sheetName);
     
@@ -301,6 +317,11 @@ function setupLogRawSheet(spreadsheet) {
  */
 function setupDailySummarySheet(spreadsheet) {
   try {
+    // SHEET_CONFIGの存在チェック
+    if (typeof SHEET_CONFIG === 'undefined' || !SHEET_CONFIG.SHEETS) {
+      throw new Error('SHEET_CONFIGが定義されていないか、SHEETSプロパティが存在しません');
+    }
+    
     const sheetName = SHEET_CONFIG.SHEETS.DAILY_SUMMARY;
     let sheet = spreadsheet.getSheetByName(sheetName);
     
@@ -353,6 +374,11 @@ function setupDailySummarySheet(spreadsheet) {
  */
 function setupMonthlySummarySheet(spreadsheet) {
   try {
+    // SHEET_CONFIGの存在チェック
+    if (typeof SHEET_CONFIG === 'undefined' || !SHEET_CONFIG.SHEETS) {
+      throw new Error('SHEET_CONFIGが定義されていないか、SHEETSプロパティが存在しません');
+    }
+    
     const sheetName = SHEET_CONFIG.SHEETS.MONTHLY_SUMMARY;
     let sheet = spreadsheet.getSheetByName(sheetName);
     
@@ -401,6 +427,11 @@ function setupMonthlySummarySheet(spreadsheet) {
  */
 function setupRequestResponsesSheet(spreadsheet) {
   try {
+    // SHEET_CONFIGの存在チェック
+    if (typeof SHEET_CONFIG === 'undefined' || !SHEET_CONFIG.SHEETS) {
+      throw new Error('SHEET_CONFIGが定義されていないか、SHEETSプロパティが存在しません');
+    }
+    
     const sheetName = SHEET_CONFIG.SHEETS.REQUEST_RESPONSES;
     let sheet = spreadsheet.getSheetByName(sheetName);
     
@@ -452,6 +483,11 @@ function setupRequestResponsesSheet(spreadsheet) {
  */
 function setupStatusDropdown(sheet) {
   try {
+    // BUSINESS_RULESの存在チェック
+    if (typeof BUSINESS_RULES === 'undefined' || !BUSINESS_RULES.REQUEST_STATUS) {
+      throw new Error('BUSINESS_RULESが定義されていないか、REQUEST_STATUSプロパティが存在しません');
+    }
+    
     // Status列（G列）の2行目以降にプルダウンを設定
     const statusValues = [
       BUSINESS_RULES.REQUEST_STATUS.PENDING,
@@ -483,6 +519,11 @@ function setupStatusDropdown(sheet) {
  */
 function applySheetProtections(spreadsheet) {
   try {
+    // SHEET_CONFIGの存在チェック
+    if (typeof SHEET_CONFIG === 'undefined' || !SHEET_CONFIG.SHEETS) {
+      throw new Error('SHEET_CONFIGが定義されていないか、SHEETSプロパティが存在しません');
+    }
+    
     Logger.log('シート保護設定を開始します');
     
     // Log_Rawシートを完全保護（管理者のみアクセス）
@@ -597,6 +638,11 @@ function showSystemInfo() {
  */
 function testSpreadsheetStructure() {
   try {
+    // SHEET_CONFIGの存在チェック
+    if (typeof SHEET_CONFIG === 'undefined' || !SHEET_CONFIG.SHEETS) {
+      throw new Error('SHEET_CONFIGが定義されていないか、SHEETSプロパティが存在しません');
+    }
+    
     Logger.log('=== スプレッドシート構造テスト開始 ===');
     
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -681,6 +727,11 @@ function testSpreadsheetStructure() {
  */
 function resetSpreadsheetStructure() {
   try {
+    // SHEET_CONFIGの存在チェック
+    if (typeof SHEET_CONFIG === 'undefined' || !SHEET_CONFIG.SHEETS) {
+      throw new Error('SHEET_CONFIGが定義されていないか、SHEETSプロパティが存在しません');
+    }
+    
     Logger.log('=== スプレッドシート構造リセット開始 ===');
     
     const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -1023,7 +1074,7 @@ function testBasicConfiguration() {
     
     configObjects.forEach(configName => {
       try {
-        const config = eval(configName);
+        const config = globalThis[configName];
         results.checks[configName] = {
           exists: true,
           type: typeof config
@@ -1081,7 +1132,7 @@ function testAuthenticationModule() {
     const authFunctions = ['authenticateUser', 'validateEmployeeAccess', 'getEmployeeInfo'];
     authFunctions.forEach(funcName => {
       try {
-        const func = eval(funcName);
+        const func = globalThis[funcName];
         results.tests[funcName] = {
           exists: typeof func === 'function',
           type: typeof func
@@ -1147,7 +1198,7 @@ function testBusinessLogicModule() {
     
     businessFunctions.forEach(funcName => {
       try {
-        const func = eval(funcName);
+        const func = globalThis[funcName];
         results.tests[funcName] = {
           exists: typeof func === 'function',
           type: typeof func
@@ -1226,7 +1277,7 @@ function testErrorHandling() {
     const errorFunctions = ['withErrorHandling', 'sendErrorAlert', 'logError'];
     errorFunctions.forEach(funcName => {
       try {
-        const func = eval(funcName);
+        const func = globalThis[funcName];
         results.tests[funcName] = {
           exists: typeof func === 'function',
           type: typeof func
@@ -1315,7 +1366,7 @@ function testMailFunctionality() {
     
     mailFunctions.forEach(funcName => {
       try {
-        const func = eval(funcName);
+        const func = globalThis[funcName];
         results.tests[funcName] = {
           exists: typeof func === 'function',
           type: typeof func
@@ -1520,6 +1571,7 @@ function onOpen() {
       .addItem('統合テスト実行', 'runIntegrationTests')
       .addItem('全機能統合テスト実行', 'runFullSystemTest')
       .addItem('構造テスト実行', 'testSpreadsheetStructure')
+      .addItem('BUSINESS_RULES存在チェックテスト', 'testBusinessRulesExistenceCheck')
       .addSeparator()
       .addItem('システム情報表示', 'showSystemInfo')
       .addItem('設定表示', 'showCurrentConfig')
@@ -1531,5 +1583,86 @@ function onOpen() {
     
   } catch (error) {
     Logger.log('メニュー追加エラー: ' + error.toString());
+  }
+}
+
+/**
+ * BUSINESS_RULESの存在チェックテスト
+ */
+function testBusinessRulesExistenceCheck() {
+  try {
+    Logger.log('=== BUSINESS_RULES存在チェックテスト開始 ===');
+    
+    const testResults = {
+      success: true,
+      tests: [],
+      errors: []
+    };
+    
+    // テスト1: BUSINESS_RULESが正常に定義されている場合
+    try {
+      if (typeof BUSINESS_RULES !== 'undefined' && BUSINESS_RULES.REQUEST_STATUS) {
+        testResults.tests.push({
+          name: 'BUSINESS_RULES正常定義テスト',
+          success: true,
+          message: 'BUSINESS_RULESが正常に定義されています'
+        });
+      } else {
+        testResults.tests.push({
+          name: 'BUSINESS_RULES正常定義テスト',
+          success: false,
+          message: 'BUSINESS_RULESが定義されていないか、REQUEST_STATUSプロパティが存在しません'
+        });
+        testResults.success = false;
+      }
+    } catch (error) {
+      testResults.tests.push({
+        name: 'BUSINESS_RULES正常定義テスト',
+        success: false,
+        message: `エラー: ${error.message}`
+      });
+      testResults.success = false;
+      testResults.errors.push(error.message);
+    }
+    
+    // テスト2: setupStatusDropdown関数の動作確認
+    try {
+      // テスト用のシートを作成
+      const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+      const testSheet = spreadsheet.insertSheet('TestStatusDropdown');
+      
+      // setupStatusDropdown関数を実行
+      setupStatusDropdown(testSheet);
+      
+      testResults.tests.push({
+        name: 'setupStatusDropdown関数テスト',
+        success: true,
+        message: 'setupStatusDropdown関数が正常に動作しました'
+      });
+      
+      // テスト用シートを削除
+      spreadsheet.deleteSheet(testSheet);
+      
+    } catch (error) {
+      testResults.tests.push({
+        name: 'setupStatusDropdown関数テスト',
+        success: false,
+        message: `エラー: ${error.message}`
+      });
+      testResults.success = false;
+      testResults.errors.push(error.message);
+    }
+    
+    Logger.log('BUSINESS_RULES存在チェックテスト結果:', JSON.stringify(testResults, null, 2));
+    Logger.log(`=== BUSINESS_RULES存在チェックテスト完了: ${testResults.success ? '成功' : '失敗'} ===`);
+    
+    return testResults;
+    
+  } catch (error) {
+    Logger.log('BUSINESS_RULES存在チェックテストエラー: ' + error.toString());
+    return {
+      success: false,
+      error: error.message
+    };
   }
 }

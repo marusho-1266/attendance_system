@@ -564,6 +564,9 @@ function calculateAdditionalMonthlyStats(employeeId, startDate, endDate) {
     const summaryData = getSheetData('Daily_Summary', 'A:I');
     const requestData = getSheetData('Request_Responses', 'A:G');
     
+    // 従業員情報を一度だけ取得（ループ外で最適化）
+    const employeeInfo = getEmployeeInfoById(employeeId);
+    
     let nightWorkMinutes = 0;
     let lateCount = 0;
     let earlyLeaveCount = 0;
@@ -588,7 +591,6 @@ function calculateAdditionalMonthlyStats(employeeId, startDate, endDate) {
         if (Number(lateEarlyMinutes) > 0) {
           // 詳細な判定のため打刻データを確認
           const timeEntries = getDailyTimeEntries(employeeId, date);
-          const employeeInfo = getEmployeeInfoById(employeeId);
           
           if (employeeInfo && timeEntries.clockIn) {
             const standardStartMinutes = timeToMinutes(employeeInfo.standardStartTime);

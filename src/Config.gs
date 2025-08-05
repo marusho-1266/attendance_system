@@ -56,8 +56,9 @@ const BUSINESS_RULES = {
     MIN_WORK_FOR_BREAK: 360 // 6時間
   },
   
-  // 残業警告閾値（分）
-  OVERTIME_WARNING_THRESHOLD: 4800, // 80時間（4週間）
+  // 残業警告閾値
+  OVERTIME_WARNING_THRESHOLD: 4800, // 80時間（4週間、分単位）
+  OVERTIME_WARNING_THRESHOLD_HOURS: 80, // 80時間（4週間、時間単位）
   
   // 深夜勤務時間帯
   NIGHT_WORK: {
@@ -147,7 +148,13 @@ const SECURITY_CONFIG = {
   RECORD_IP_ADDRESS: true,
   
   // アクセスログ保持期間（日）
-  ACCESS_LOG_RETENTION_DAYS: 90
+  ACCESS_LOG_RETENTION_DAYS: 90,
+  
+  // X-Frame-Options設定
+  // DENY: iframe埋め込みを完全に拒否（最も安全）
+  // SAMEORIGIN: 同じオリジンのみ許可
+  // ALLOWALL: すべてのドメインを許可（危険）
+  X_FRAME_OPTIONS_MODE: 'DENY'
 };
 
 /**

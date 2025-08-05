@@ -3,6 +3,26 @@
  * Googleフォームからの申請を受信し、承認ワークフローを管理する
  */
 
+// シート列インデックス定数
+const REQUEST_RESPONSES_COLUMNS = {
+  TIMESTAMP: 1,      // A列: タイムスタンプ
+  EMPLOYEE_ID: 2,    // B列: 社員ID
+  REQUEST_TYPE: 3,   // C列: 申請種別
+  DETAILS: 4,        // D列: 詳細
+  REQUESTED_VALUE: 5, // E列: 希望値
+  APPROVER: 6,       // F列: 承認者
+  STATUS: 7          // G列: ステータス
+};
+
+const RECALCULATION_QUEUE_COLUMNS = {
+  MARK_TIME: 1,      // A列: マーク時刻
+  EMPLOYEE_ID: 2,    // B列: 社員ID
+  TARGET_DATE: 3,    // C列: 対象日付
+  TYPE: 4,           // D列: タイプ
+  STATUS: 5,         // E列: ステータス
+  NOTE: 6            // F列: 備考
+};
+
 /**
  * Googleフォーム送信時のトリガー関数
  * フォーム申請を受信し、Request_Responsesシートに記録する
@@ -14,7 +34,7 @@ function onRequestSubmit(e) {
     
     // フォームデータの取得
     const formData = extractFormData(e);
-    Logger.log('フォームデータ: ' + JSON.stringify(formData));
+    Logger.log('フォームデータ: ' + getAnonymizedFormData(e.values));
     
     // 申請データの検証
     validateRequestData(formData);
@@ -35,7 +55,7 @@ function onRequestSubmit(e) {
     };
     
   }, 'FormManager.onRequestSubmit', 'HIGH', {
-    formData: e ? JSON.stringify(e.values) : 'No form data'
+    formData: e ? getAnonymizedFormData(e.values) : 'No form data'
   });
 }
 
@@ -53,12 +73,32 @@ function extractFormData(e) {
   
   // フォームの構造に基づいてデータを抽出
   // 想定フォーム構造: [タイムスタンプ, 社員ID, 申請種別, 詳細, 希望値]
+  const expectedLength = 5;
+  
+  // 配列の長さチェック
+  if (!Array.isArray(values) || values.length < expectedLength) {
+    Logger.log(`FormManager: フォームデータの長さが不足しています。期待値: ${expectedLength}, 実際: ${values ? values.length : 'undefined'}`);
+    Logger.log(`FormManager: 受信データ: ${getAnonymizedFormData(values)}`);
+    
+    // 配列が短い場合は、不足分を空文字で補完
+    const paddedValues = Array.isArray(values) ? [...values] : [];
+    while (paddedValues.length < expectedLength) {
+      paddedValues.push('');
+    }
+    
+    Logger.log(`FormManager: 補完後のデータ: ${getAnonymizedFormData(paddedValues)}`);
+  }
+  
+  const safeValues = Array.isArray(values) && values.length >= expectedLength ? values : 
+                    (Array.isArray(values) ? [...values, ...Array(expectedLength - values.length).fill('')] : 
+                    Array(expectedLength).fill(''));
+  
   const formData = {
-    timestamp: values[0] || new Date(),
-    employeeId: values[1] || '',
-    requestType: values[2] || '',
-    details: values[3] || '',
-    requestedValue: values[4] || ''
+    timestamp: safeValues[0] || new Date(),
+    employeeId: safeValues[1] || '',
+    requestType: safeValues[2] || '',
+    details: safeValues[3] || '',
+    requestedValue: safeValues[4] || ''
   };
   
   return formData;
@@ -282,16 +322,16 @@ function getRequestData(requestId) {
       return null;
     }
     
-    const data = sheet.getRange(rowIndex, 1, 1, 7).getValues()[0];
+    const data = sheet.getRange(rowIndex, 1, 1, REQUEST_RESPONSES_COLUMNS.STATUS).getValues()[0];
     
     return {
-      timestamp: data[0],
-      employeeId: data[1],
-      requestType: data[2],
-      details: data[3],
-      requestedValue: data[4],
-      approver: data[5],
-      status: data[6]
+      timestamp: data[REQUEST_RESPONSES_COLUMNS.TIMESTAMP - 1],
+      employeeId: data[REQUEST_RESPONSES_COLUMNS.EMPLOYEE_ID - 1],
+      requestType: data[REQUEST_RESPONSES_COLUMNS.REQUEST_TYPE - 1],
+      details: data[REQUEST_RESPONSES_COLUMNS.DETAILS - 1],
+      requestedValue: data[REQUEST_RESPONSES_COLUMNS.REQUESTED_VALUE - 1],
+      approver: data[REQUEST_RESPONSES_COLUMNS.APPROVER - 1],
+      status: data[REQUEST_RESPONSES_COLUMNS.STATUS - 1]
     };
     
   } catch (error) {
@@ -318,7 +358,7 @@ function updateRequestStatus(requestId, status) {
     }
     
     // ステータス列（G列）を更新
-    sheet.getRange(rowIndex, 7).setValue(status);
+    sheet.getRange(rowIndex, REQUEST_RESPONSES_COLUMNS.STATUS).setValue(status);
     
     Logger.log('ステータス更新完了: ' + requestId + ' -> ' + status);
     
@@ -429,19 +469,21 @@ function extractDateRangeFromRequest(requestData) {
 }
 
 /**
- * 日次再計算のマーキング
+ * 再計算マーキングの共通処理
  * @param {string} employeeId - 従業員ID
  * @param {Date} targetDate - 対象日付
+ * @param {string} type - 再計算タイプ ('DAILY', 'OVERTIME', 'LEAVE')
+ * @param {string} note - メモ
  */
-function markForRecalculation(employeeId, targetDate) {
+function markForRecalculationCommon(employeeId, targetDate, type, note) {
   try {
     const sheet = getOrCreateRecalculationSheet();
     const dateStr = Utilities.formatDate(targetDate, 'JST', 'yyyy/MM/dd');
     
     // 既存のマーキングをチェック
-    const existingMark = findRecalculationMark(sheet, employeeId, dateStr, 'DAILY');
+    const existingMark = findRecalculationMark(sheet, employeeId, dateStr, type);
     if (existingMark) {
-      Logger.log('既に再計算マーク済み: ' + employeeId + ' - ' + dateStr);
+      Logger.log(`既に${type}再計算マーク済み: ${employeeId} - ${dateStr}`);
       return;
     }
     
@@ -450,17 +492,26 @@ function markForRecalculation(employeeId, targetDate) {
       new Date(),
       employeeId,
       dateStr,
-      'DAILY',
+      type,
       'PENDING',
-      '時刻修正による再計算'
+      note
     ]);
     
-    Logger.log('日次再計算マーク完了: ' + employeeId + ' - ' + dateStr);
+    Logger.log(`${type}再計算マーク完了: ${employeeId} - ${dateStr}`);
     
   } catch (error) {
-    Logger.log('日次再計算マークエラー: ' + error.toString());
+    Logger.log(`${type}再計算マークエラー: ${error.toString()}`);
     throw error;
   }
+}
+
+/**
+ * 日次再計算のマーキング
+ * @param {string} employeeId - 従業員ID
+ * @param {Date} targetDate - 対象日付
+ */
+function markForRecalculation(employeeId, targetDate) {
+  markForRecalculationCommon(employeeId, targetDate, 'DAILY', '時刻修正による再計算');
 }
 
 /**
@@ -469,33 +520,7 @@ function markForRecalculation(employeeId, targetDate) {
  * @param {Date} targetDate - 対象日付
  */
 function markForOvertimeRecalculation(employeeId, targetDate) {
-  try {
-    const sheet = getOrCreateRecalculationSheet();
-    const dateStr = Utilities.formatDate(targetDate, 'JST', 'yyyy/MM/dd');
-    
-    // 既存のマーキングをチェック
-    const existingMark = findRecalculationMark(sheet, employeeId, dateStr, 'OVERTIME');
-    if (existingMark) {
-      Logger.log('既に残業再計算マーク済み: ' + employeeId + ' - ' + dateStr);
-      return;
-    }
-    
-    // 新しいマーキングを追加
-    sheet.appendRow([
-      new Date(),
-      employeeId,
-      dateStr,
-      'OVERTIME',
-      'PENDING',
-      '残業申請による再計算'
-    ]);
-    
-    Logger.log('残業再計算マーク完了: ' + employeeId + ' - ' + dateStr);
-    
-  } catch (error) {
-    Logger.log('残業再計算マークエラー: ' + error.toString());
-    throw error;
-  }
+  markForRecalculationCommon(employeeId, targetDate, 'OVERTIME', '残業申請による再計算');
 }
 
 /**
@@ -658,16 +683,16 @@ function getPendingRequests() {
     
     // ヘッダー行をスキップして処理
     for (let i = 1; i < data.length; i++) {
-      if (data[i][6] === 'Pending') {  // ステータス列
+      if (data[i][REQUEST_RESPONSES_COLUMNS.STATUS] === 'Pending') {  // ステータス列
         pendingRequests.push({
           rowIndex: i + 1,
-          timestamp: data[i][0],
-          employeeId: data[i][1],
-          requestType: data[i][2],
-          details: data[i][3],
-          requestedValue: data[i][4],
-          approver: data[i][5],
-          status: data[i][6]
+          timestamp: data[i][REQUEST_RESPONSES_COLUMNS.TIMESTAMP],
+          employeeId: data[i][REQUEST_RESPONSES_COLUMNS.EMPLOYEE_ID],
+          requestType: data[i][REQUEST_RESPONSES_COLUMNS.REQUEST_TYPE],
+          details: data[i][REQUEST_RESPONSES_COLUMNS.DETAILS],
+          requestedValue: data[i][REQUEST_RESPONSES_COLUMNS.REQUESTED_VALUE],
+          approver: data[i][REQUEST_RESPONSES_COLUMNS.APPROVER],
+          status: data[i][REQUEST_RESPONSES_COLUMNS.STATUS]
         });
       }
     }
@@ -710,7 +735,7 @@ function sendApprovalNotification(approver, requests) {
     }
     
     const subject = `【出勤管理】承認依頼 (${requests.length}件)`;
-    let body = `承認者様\n\n以下の申請について承認をお願いいたします。\n\n`;
+    let body = `承認者様\n\n`;
     
     requests.forEach((request, index) => {
       body += `${index + 1}. ${request.requestType}申請\n`;
@@ -721,7 +746,7 @@ function sendApprovalNotification(approver, requests) {
     });
     
     body += `承認は以下のシートで行ってください:\n`;
-    body += `${SpreadsheetApp.getActiveSpreadsheet().getUrl()}#gid=Request_Responses\n\n`;
+    body += `${SpreadsheetApp.getActiveSpreadsheet().getUrl()}#gid=${getSheetId('Request_Responses')}\n\n`;
     body += `※ステータス列で「Approved」または「Rejected」を選択してください。`;
     
     // メール送信（MailManagerが利用可能な場合）
@@ -924,7 +949,7 @@ function createApplicantNotificationBody(requestData, status) {
   
   body += `■ 確認\n`;
   body += `勤怠記録の確認は以下のシートで行えます:\n`;
-  body += `${SpreadsheetApp.getActiveSpreadsheet().getUrl()}#gid=Daily_Summary\n\n`;
+  body += `${SpreadsheetApp.getActiveSpreadsheet().getUrl()}#gid=${getSheetId('Daily_Summary')}\n\n`;
   body += `※このメールは自動送信されています。\n`;
   body += `※ご不明な点がございましたら、システム管理者までお問い合わせください。`;
   
@@ -954,7 +979,7 @@ function onRequestResponsesEdit(e) {
     }
     
     // ステータス列（G列）の編集のみ処理
-    if (range.getColumn() !== 7) {
+    if (range.getColumn() !== REQUEST_RESPONSES_COLUMNS.STATUS) {
       return;
     }
     
@@ -1000,7 +1025,7 @@ function processPendingApprovals() {
     
     // ヘッダー行をスキップして処理
     for (let i = 1; i < data.length; i++) {
-      const status = data[i][6]; // ステータス列
+      const status = data[i][REQUEST_RESPONSES_COLUMNS.STATUS]; // ステータス列
       
       // Pendingから変更されたものを検出
       if (['Approved', 'Rejected'].includes(status)) {
@@ -1072,15 +1097,15 @@ function getPendingRecalculations() {
     
     // ヘッダー行をスキップして処理
     for (let i = 1; i < data.length; i++) {
-      if (data[i][4] === 'PENDING') { // ステータス列
+      if (data[i][RECALCULATION_QUEUE_COLUMNS.STATUS] === 'PENDING') { // ステータス列
         pending.push({
           rowIndex: i + 1,
-          markTime: data[i][0],
-          employeeId: data[i][1],
-          targetDate: data[i][2],
-          type: data[i][3],
-          status: data[i][4],
-          note: data[i][5]
+          markTime: data[i][RECALCULATION_QUEUE_COLUMNS.MARK_TIME],
+          employeeId: data[i][RECALCULATION_QUEUE_COLUMNS.EMPLOYEE_ID],
+          targetDate: data[i][RECALCULATION_QUEUE_COLUMNS.TARGET_DATE],
+          type: data[i][RECALCULATION_QUEUE_COLUMNS.TYPE],
+          status: data[i][RECALCULATION_QUEUE_COLUMNS.STATUS],
+          note: data[i][RECALCULATION_QUEUE_COLUMNS.NOTE]
         });
       }
     }
@@ -1105,17 +1130,47 @@ function markRecalculationCompleted(rowIndex) {
     }
     
     // ステータスを'COMPLETED'に更新
-    sheet.getRange(rowIndex, 5).setValue('COMPLETED');
+    sheet.getRange(rowIndex, RECALCULATION_QUEUE_COLUMNS.STATUS).setValue('COMPLETED');
     
     // 完了日時を備考に追加
-    const currentNote = sheet.getRange(rowIndex, 6).getValue();
+    const currentNote = sheet.getRange(rowIndex, RECALCULATION_QUEUE_COLUMNS.NOTE).getValue();
     const completedNote = currentNote + ' (完了: ' + 
                          Utilities.formatDate(new Date(), 'JST', 'yyyy/MM/dd HH:mm') + ')';
-    sheet.getRange(rowIndex, 6).setValue(completedNote);
+    sheet.getRange(rowIndex, RECALCULATION_QUEUE_COLUMNS.NOTE).setValue(completedNote);
     
     Logger.log('再計算完了マーク: 行' + rowIndex);
     
   } catch (error) {
     Logger.log('再計算完了マークエラー: ' + error.toString());
+  }
+}
+
+/**
+ * 機密情報を除外したフォームデータを取得
+ * ログ出力用に使用
+ * @param {Array} values - フォーム送信値の配列
+ * @returns {string} 匿名化されたフォームデータ
+ */
+function getAnonymizedFormData(values) {
+  try {
+    if (!Array.isArray(values) || values.length === 0) {
+      return 'Empty form data';
+    }
+    
+    // 機密情報を除外した構造体を作成
+    const anonymizedData = {
+      timestamp: values[0] ? '***' : 'No timestamp',
+      employeeId: values[1] ? '***' : 'No employee ID',
+      requestType: values[2] || 'No request type',
+      details: values[3] ? '[詳細情報]' : 'No details',
+      requestedValue: values[4] ? '***' : 'No requested value',
+      dataLength: values.length
+    };
+    
+    return JSON.stringify(anonymizedData);
+    
+  } catch (error) {
+    Logger.log('匿名化処理エラー: ' + error.toString());
+    return 'Error in anonymization';
   }
 }

@@ -205,7 +205,7 @@ function setSheetData(sheetName, range, values) {
     if (!range) {
       // 範囲が指定されていない場合は、A1から開始
       const numRows = values.length;
-      const numCols = values[0] ? values[0].length : 0;
+      const numCols = (values.length > 0 && values[0]) ? values[0].length : 0;
       
       if (numRows > 0 && numCols > 0) {
         sheet.getRange(1, 1, numRows, numCols).setValues(values);
@@ -316,9 +316,10 @@ function formatTime(date, format = 'HH:MM') {
     Logger.log('時刻フォーマットエラー: ' + error.toString());
     return '';
   }
-}/**
- *
- 現在の日付を取得（時刻部分を除去）
+}
+
+/**
+ * 現在の日付を取得（時刻部分を除去）
  * @return {Date} 今日の日付（00:00:00）
  */
 function getToday() {
@@ -497,9 +498,10 @@ function calculateNightWorkTime(startTime, endTime) {
     Logger.log('深夜勤務時間計算エラー: ' + error.toString());
     return 0;
   }
-}/**
- 
-* シートオブジェクトを取得
+}
+
+/**
+ * シートオブジェクトを取得
  * @param {string} sheetName - シート名
  * @return {Sheet} シートオブジェクト
  * @throws {Error} シートが見つからない場合

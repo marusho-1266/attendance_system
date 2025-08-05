@@ -110,6 +110,10 @@ function weeklyOvertimeJob() {
     const startTime = new Date();
     Logger.log(`weeklyOvertimeJob開始: ${formatTime(startTime, 'YYYY-MM-DD HH:MM:SS')}`);
     
+    // 残業警告閾値を取得
+    const businessRules = getConfig('BUSINESS');
+    const overtimeThreshold = businessRules.OVERTIME_WARNING_THRESHOLD_HOURS;
+    
     // 過去4週間の期間を計算
     const endDate = addDays(getToday(), -1); // 昨日まで
     const startDate = addDays(endDate, -28); // 4週間前から
@@ -125,8 +129,8 @@ function weeklyOvertimeJob() {
       const overtimeMinutes = calculateEmployeeOvertimeForPeriod(employee.employeeId, startDate, endDate);
       const overtimeHours = Math.round(overtimeMinutes / 60 * 10) / 10; // 小数点1桁
       
-      // 80時間を超える場合は警告対象
-      if (overtimeHours > 80) {
+      // 設定された閾値を超える場合は警告対象
+      if (overtimeHours > overtimeThreshold) {
         overtimeEmployees.push({
           employeeId: employee.employeeId,
           name: employee.name,
@@ -188,10 +192,10 @@ function weeklyOvertimeJob() {
  * 要件: 4.4 - 月次ジョブが1日02:30に実行される時、システムはMonthly_Summaryシートを更新し、CSVファイルをGoogle Driveにエクスポートする
  */
 function monthlyJob() {
-  const startTime = new Date();
-  Logger.log(`monthlyJob開始: ${formatTime(startTime, 'YYYY-MM-DD HH:MM:SS')}`);
-  
-  try {
+  return withErrorHandling(() => {
+    const startTime = new Date();
+    Logger.log(`monthlyJob開始: ${formatTime(startTime, 'YYYY-MM-DD HH:MM:SS')}`);
+    
     // 前月の期間を計算
     const today = getToday();
     const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
@@ -252,11 +256,14 @@ function monthlyJob() {
     // 処理結果を管理者に通知
     sendMonthlyJobReport(yearMonth, employees.length, csvFiles, executionTime);
     
-  } catch (error) {
-    Logger.log(`monthlyJobエラー: ${error.toString()}`);
-    sendErrorAlert(error, 'monthlyJob');
-    throw error;
-  }
+    return {
+      success: true,
+      processedCount: employees.length,
+      yearMonth: yearMonth,
+      executionTime: executionTime
+    };
+    
+  }, 'Triggers.monthlyJob', 'CRITICAL');
 }
 
 /**
@@ -1451,8 +1458,9 @@ function syntaxTest() {
     Logger.log('Triggers.gs構文エラー: ' + error.toString());
     return false;
   }
-}/*
-*
+}
+
+/**
  * 承認済み申請による再計算処理
  * 日次ジョブから呼び出される
  * @returns {Object} 処理結果
@@ -1895,7 +1903,9 @@ function generateOvertimeReportForJob(startDate, endDate) {
     
     try {
       // 残業監視レポートを生成・エクスポート
-      const result = generateAndExportOvertimeReport(80, 4, '残業監視レポート');
+      const businessRules = getConfig('BUSINESS');
+      const overtimeThreshold = businessRules.OVERTIME_WARNING_THRESHOLD_HOURS;
+      const result = generateAndExportOvertimeReport(overtimeThreshold, 4, '残業監視レポート');
       
       if (result.success) {
         // 管理者にレポート完了通知を送信（アラートは既にmonitorOvertimeAndAlert内で送信済み）

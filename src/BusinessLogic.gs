@@ -56,6 +56,25 @@ function calculateDailyWorkTime(employeeId, date) {
       };
     }
     
+    // 出勤時刻と退勤時刻の妥当性検証
+    const clockInMinutes = timeToMinutes(timeEntries.clockIn);
+    const clockOutMinutes = timeToMinutes(timeEntries.clockOut);
+    
+    // 出勤時刻が退勤時刻より後の場合（日をまたがない場合）
+    if (clockInMinutes > clockOutMinutes) {
+      Logger.log(`時刻データ不整合 (${employeeId}, ${formatDate(date)}): 出勤時刻(${timeEntries.clockIn}) > 退勤時刻(${timeEntries.clockOut})`);
+      return {
+        workMinutes: 0,
+        overtimeMinutes: 0,
+        breakMinutes: 0,
+        lateMinutes: 0,
+        earlyLeaveMinutes: 0,
+        nightWorkMinutes: 0,
+        status: 'INCOMPLETE',
+        message: '出勤時刻が退勤時刻より後になっています'
+      };
+    }
+    
     // 基本労働時間を計算
     const totalMinutes = calculateTimeDifference(timeEntries.clockIn, timeEntries.clockOut);
     
@@ -133,7 +152,7 @@ function calculateOvertime(workMinutes, standardMinutes, date) {
     
   } catch (error) {
     Logger.log('残業時間計算エラー: ' + error.toString());
-    return 0;
+    throw error; // エラーを再スローして呼び出し元で適切に処理できるようにする
   }
 }
 

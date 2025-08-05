@@ -51,14 +51,19 @@ graph TB
 ```javascript
 // 主要関数
 function authenticateUser()
+function authenticateUserFromEvent(e)
 function validateEmployeeAccess(email)
 function getEmployeeInfo(email)
 ```
 
 **責任:**
-- `Session.getActiveUser().getEmail()`による認証
+- 複数の認証方法によるユーザー識別
+  - `Session.getActiveUser().getEmail()`（プライマリ）
+  - `e.parameter.email`（WebAppイベントからの取得）
+  - フォールバック認証方法
 - 従業員マスタとの照合
 - アクセス権限の検証
+- デプロイメント設定に応じた認証方法の自動選択
 
 ### 2. 打刻処理コンポーネント
 
@@ -250,6 +255,237 @@ const updatedEmployees = getUpdatedEmployees(date);
 updatedEmployees.forEach(emp => updateDailySummary(emp.id, date));
 ```
 
+## 個人情報保護対策
+
+### PII（個人識別情報）フィールドの保護
+
+#### 保護対象フィールド
+- **氏名** (Master_Employee列B, Log_Raw列C)
+- **Gmail** (Master_Employee列C, Log_Raw関連)
+- **端末IP** (Log_Raw列E)
+- **備考** (Log_Raw列F, Request_Responses列D)
+
+#### データマスキング機能
+```javascript
+// PIIフィールドのマスキング処理
+function maskPiiData(data, fields) {
+  const maskedData = [...data];
+  fields.forEach(field => {
+    if (field === 'name') {
+      maskedData[field] = maskName(data[field]);
+    } else if (field === 'email') {
+      maskedData[field] = maskEmail(data[field]);
+    } else if (field === 'ip') {
+      maskedData[field] = maskIpAddress(data[field]);
+    }
+  });
+  return maskedData;
+}
+
+// 氏名マスキング（例：山田太郎 → 山田***）
+function maskName(name) {
+  if (!name || name.length <= 2) return name;
+  return name.substring(0, 2) + '***';
+}
+
+// メールアドレスマスキング（例：yamada@company.com → y***@company.com）
+function maskEmail(email) {
+  if (!email || !email.includes('@')) return email;
+  const [local, domain] = email.split('@');
+  return local.substring(0, 1) + '***@' + domain;
+}
+
+// IPアドレスマスキング（例：192.168.1.100 → 192.168.***.***）
+function maskIpAddress(ip) {
+  if (!ip) return ip;
+  const parts = ip.split('.');
+  if (parts.length === 4) {
+    return parts[0] + '.' + parts[1] + '.***.***';
+  }
+  return ip;
+}
+```
+
+#### アクセス制限
+```javascript
+// ログ出力時のPII保護
+function logWithPiiProtection(level, message, data = null) {
+  if (data && containsPii(data)) {
+    const maskedData = maskPiiData(data, ['name', 'email', 'ip']);
+    Logger.log(`[${level}] ${message}: ${JSON.stringify(maskedData)}`);
+  } else {
+    Logger.log(`[${level}] ${message}`);
+  }
+}
+
+// PII含有チェック
+function containsPii(data) {
+  const piiFields = ['name', 'email', 'gmail', 'ip', '備考'];
+  return piiFields.some(field => data.hasOwnProperty(field) && data[field]);
+}
+```
+
+### ログ保持期間の定義
+
+#### ログ保持ポリシー
+- **Log_Raw**: 3年間保持（労働基準法第109条準拠）
+- **Daily_Summary**: 7年間保持（労働基準法第109条準拠）
+- **Monthly_Summary**: 7年間保持（労働基準法第109条準拠）
+- **Request_Responses**: 3年間保持（申請記録として）
+- **Error_Log**: 1年間保持（システム運用記録）
+
+#### 自動削除機能
+```javascript
+// 期限切れデータの自動削除
+function cleanupExpiredData() {
+  const currentDate = new Date();
+  
+  // Log_Raw: 3年経過データ削除
+  cleanupSheetData('Log_Raw', 3 * 365);
+  
+  // Daily_Summary: 7年経過データ削除
+  cleanupSheetData('Daily_Summary', 7 * 365);
+  
+  // Monthly_Summary: 7年経過データ削除
+  cleanupSheetData('Monthly_Summary', 7 * 365);
+  
+  // Request_Responses: 3年経過データ削除
+  cleanupSheetData('Request_Responses', 3 * 365);
+  
+  // Error_Log: 1年経過データ削除
+  cleanupSheetData('Error_Log', 365);
+}
+
+// シート別データ削除
+function cleanupSheetData(sheetName, daysToKeep) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  if (!sheet) return;
+  
+  const data = sheet.getDataRange().getValues();
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+  
+  const rowsToDelete = [];
+  for (let i = data.length - 1; i >= 0; i--) {
+    const rowDate = new Date(data[i][0]); // タイムスタンプ列
+    if (rowDate < cutoffDate) {
+      rowsToDelete.push(i + 1);
+    }
+  }
+  
+  // 行を削除（下から上に向かって削除）
+  rowsToDelete.forEach(rowIndex => {
+    sheet.deleteRow(rowIndex);
+  });
+  
+  Logger.log(`${sheetName}: ${rowsToDelete.length}行を削除しました`);
+}
+```
+
+### 退職者データ処理
+
+#### 自動匿名化・削除手順
+```javascript
+// 退職者データの処理
+function processRetiredEmployeeData(employeeId) {
+  const employee = getEmployeeInfo(employeeId);
+  if (!employee) return;
+  
+  // 1. 退職者マスターへの移動
+  moveToRetiredMaster(employee);
+  
+  // 2. ログデータの匿名化
+  anonymizeLogData(employeeId);
+  
+  // 3. サマリーデータの匿名化
+  anonymizeSummaryData(employeeId);
+  
+  // 4. 申請データの匿名化
+  anonymizeRequestData(employeeId);
+  
+  Logger.log(`退職者データ処理完了: ${employeeId}`);
+}
+
+// ログデータの匿名化
+function anonymizeLogData(employeeId) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Log_Raw');
+  const data = sheet.getDataRange().getValues();
+  
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][1] === employeeId) { // 社員ID列
+      // 氏名を匿名化
+      sheet.getRange(i + 1, 3).setValue('退職者***');
+      // 備考をクリア
+      sheet.getRange(i + 1, 6).setValue('');
+    }
+  }
+}
+
+// サマリーデータの匿名化
+function anonymizeSummaryData(employeeId) {
+  const sheets = ['Daily_Summary', 'Monthly_Summary'];
+  
+  sheets.forEach(sheetName => {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    if (!sheet) return;
+    
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][1] === employeeId) { // 社員ID列
+        // 備考を匿名化
+        const lastCol = data[i].length;
+        sheet.getRange(i + 1, lastCol).setValue('退職者データ');
+      }
+    }
+  });
+}
+```
+
+### 個人情報保護法準拠
+
+#### 法的要件への対応
+- **利用目的の明示**: 勤怠管理・給与計算・労務管理
+- **適切な取得**: 必要最小限の個人情報のみ収集
+- **安全管理措置**: アクセス制限・暗号化・ログ監視
+- **委託先管理**: Google Apps Script環境での適切な管理
+- **個人の権利保護**: 開示・訂正・利用停止・削除への対応
+
+#### プライバシーポリシー要件
+```javascript
+// プライバシーポリシー確認機能
+function checkPrivacyCompliance() {
+  const compliance = {
+    dataRetention: checkDataRetentionPolicy(),
+    accessControl: checkAccessControl(),
+    dataMasking: checkDataMasking(),
+    auditLog: checkAuditLog()
+  };
+  
+  return compliance;
+}
+
+// データ保持期間チェック
+function checkDataRetentionPolicy() {
+  const policies = {
+    'Log_Raw': 3 * 365,
+    'Daily_Summary': 7 * 365,
+    'Monthly_Summary': 7 * 365,
+    'Request_Responses': 3 * 365,
+    'Error_Log': 365
+  };
+  
+  return Object.keys(policies).map(sheetName => {
+    const actualDays = getOldestDataAge(sheetName);
+    return {
+      sheet: sheetName,
+      policy: policies[sheetName],
+      actual: actualDays,
+      compliant: actualDays <= policies[sheetName]
+    };
+  });
+}
+```
+
 ## エラーハンドリング
 
 ### エラー処理戦略
@@ -427,6 +663,8 @@ function sendBatchNotifications(notifications) {
 // チャンク処理で実行時間制限回避
 function processLargeDataset(data) {
   const CHUNK_SIZE = 100;
+  const startTime = new Date(); // 実行開始時刻を記録
+  
   for (let i = 0; i < data.length; i += CHUNK_SIZE) {
     const chunk = data.slice(i, i + CHUNK_SIZE);
     processChunk(chunk);

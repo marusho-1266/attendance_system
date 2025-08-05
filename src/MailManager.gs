@@ -11,6 +11,22 @@
  */
 
 /**
+ * メールアドレスの形式を検証
+ * 
+ * @param {string} email - 検証するメールアドレス
+ * @return {boolean} 有効な場合はtrue、無効な場合はfalse
+ */
+function isValidEmail(email) {
+  if (!email || typeof email !== 'string') {
+    return false;
+  }
+  
+  // 基本的なメールアドレス形式チェック
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+}
+
+/**
  * バッチメール送信機能（クォータ節約）
  * 同一受信者への複数メールを1通にまとめて送信
  * 
@@ -26,34 +42,60 @@ function sendBatchNotifications(notifications) {
       return;
     }
 
-    // 受信者ごとにグループ化
+    // 受信者ごとにグループ化（無効なメールアドレスを除外）
     const groupedByRecipient = {};
+    const invalidEmails = [];
+    
     notifications.forEach(notification => {
       const recipient = notification.recipient;
+      
+      // メールアドレスの検証
+      if (!isValidEmail(recipient)) {
+        Logger.log(`MailManager: 無効なメールアドレスを検出 - ${recipient}`);
+        invalidEmails.push(recipient);
+        return; // この通知をスキップ
+      }
+      
       if (!groupedByRecipient[recipient]) {
         groupedByRecipient[recipient] = [];
       }
       groupedByRecipient[recipient].push(notification);
     });
 
+    // 無効なメールアドレスがある場合はログに記録
+    if (invalidEmails.length > 0) {
+      Logger.log(`MailManager: 無効なメールアドレスにより${invalidEmails.length}件の通知をスキップしました`);
+    }
+
     // バッチ処理でメール送信（クォータ制限対策）
     const recipients = Object.keys(groupedByRecipient);
     const sendResult = processBatch(recipients, (recipient, index) => {
       const messages = groupedByRecipient[recipient];
       
-      if (messages.length === 1) {
-        // 単一メッセージの場合はそのまま送信
-        const msg = messages[0];
-        GmailApp.sendEmail(recipient, msg.subject, msg.body);
-        Logger.log(`MailManager: 単一メール送信完了 - ${recipient}`);
-      } else {
-        // 複数メッセージの場合は結合して送信
-        const combinedMessage = combineMessages(messages);
-        GmailApp.sendEmail(recipient, combinedMessage.subject, combinedMessage.body);
-        Logger.log(`MailManager: バッチメール送信完了 - ${recipient} (${messages.length}件)`);
+      // 再度メールアドレスを検証（念のため）
+      if (!isValidEmail(recipient)) {
+        Logger.log(`MailManager: 送信時に無効なメールアドレスを検出 - ${recipient}`);
+        return { recipient: recipient, messageCount: 0, error: 'Invalid email address' };
       }
       
-      return { recipient: recipient, messageCount: messages.length };
+      try {
+        if (messages.length === 1) {
+          // 単一メッセージの場合はそのまま送信
+          const msg = messages[0];
+          GmailApp.sendEmail(recipient, msg.subject, msg.body);
+          Logger.log(`MailManager: 単一メール送信完了 - ${recipient}`);
+        } else {
+          // 複数メッセージの場合は結合して送信
+          const combinedMessage = combineMessages(messages);
+          GmailApp.sendEmail(recipient, combinedMessage.subject, combinedMessage.body);
+          Logger.log(`MailManager: バッチメール送信完了 - ${recipient} (${messages.length}件)`);
+        }
+        
+        return { recipient: recipient, messageCount: messages.length };
+      } catch (error) {
+        Logger.log(`MailManager: メール送信エラー - ${recipient}: ${error.toString()}`);
+        return { recipient: recipient, messageCount: 0, error: error.toString() };
+      }
       
     }, {
       context: 'MailManager.BatchSend',
@@ -62,12 +104,13 @@ function sendBatchNotifications(notifications) {
       maxExecutionTime: ERROR_CONFIG.MAX_EXECUTION_TIME
     });
 
-    Logger.log(`MailManager: バッチ送信完了 - 総通知数: ${notifications.length}, 送信メール数: ${sendResult.processedCount}`);
+    Logger.log(`MailManager: バッチ送信完了 - 総通知数: ${notifications.length}, 送信メール数: ${sendResult.processedCount}, 無効メールアドレス: ${invalidEmails.length}件`);
     
     return {
       success: true,
       totalNotifications: notifications.length,
       sentEmails: sendResult.processedCount,
+      invalidEmails: invalidEmails,
       errors: sendResult.errors
     };
 
@@ -92,15 +135,15 @@ function combineMessages(messages) {
   }
 
   let combinedBody = '出勤管理システムからの通知をまとめてお送りします。\n\n';
-  combinedBody += '=' * 50 + '\n\n';
+  combinedBody += '='.repeat(50) + '\n\n';
 
   messages.forEach((msg, index) => {
     combinedBody += `【通知 ${index + 1}】${msg.subject}\n`;
-    combinedBody += '-' * 30 + '\n';
+    combinedBody += '-'.repeat(30) + '\n';
     combinedBody += msg.body + '\n\n';
   });
 
-  combinedBody += '=' * 50 + '\n';
+  combinedBody += '='.repeat(50) + '\n';
   combinedBody += '※このメールは自動送信されています。\n';
   combinedBody += `送信時刻: ${Utilities.formatDate(new Date(), 'JST', 'yyyy/MM/dd HH:mm:ss')}`;
 

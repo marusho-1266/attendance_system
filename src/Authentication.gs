@@ -14,7 +14,8 @@ function authenticateUser() {
     const userEmail = Session.getActiveUser().getEmail();
     
     if (!userEmail) {
-      throw new Error('ユーザーのメールアドレスを取得できませんでした');
+      Logger.log('Session.getActiveUser()がnullを返しました。代替認証方法を試行します。');
+      throw new Error('ユーザーのメールアドレスを取得できませんでした。WebAppのデプロイメント設定を確認してください。');
     }
     
     Logger.log(`認証試行: ${userEmail}`);
@@ -40,31 +41,97 @@ function authenticateUser() {
 }
 
 /**
- * メールアドレスから従業員情報を取得
- * @param {string} email - 検索するメールアドレス
+ * WebAppイベントからユーザーを認証し、従業員情報を取得
+ * @param {Object} e - WebAppイベントオブジェクト
+ * @returns {Object} 認証された従業員情報
+ * @throws {Error} 認証失敗時
+ */
+function authenticateUserFromEvent(e) {
+  return withErrorHandling(() => {
+    let userEmail = null;
+    
+    // 1. イベントパラメータからメールアドレスを取得
+    if (e && e.parameter && e.parameter.email) {
+      userEmail = e.parameter.email;
+      Logger.log(`イベントパラメータからメールアドレスを取得: ${userEmail}`);
+    }
+    
+    // 2. イベントパラメータにない場合は、セッションから取得を試行
+    if (!userEmail) {
+      try {
+        userEmail = Session.getActiveUser().getEmail();
+        if (userEmail) {
+          Logger.log(`セッションからメールアドレスを取得: ${userEmail}`);
+        }
+      } catch (error) {
+        Logger.log(`セッションからのメールアドレス取得に失敗: ${error.message}`);
+      }
+    }
+    
+    // 3. それでも取得できない場合は、デプロイメント設定の問題として処理
+    if (!userEmail) {
+      Logger.log('すべての認証方法でメールアドレスの取得に失敗しました');
+      throw new Error('ユーザーのメールアドレスを取得できませんでした。デプロイメント設定を確認してください。');
+    }
+    
+    Logger.log(`認証試行: ${userEmail}`);
+    
+    // 従業員マスターとの照合
+    const employeeInfo = getEmployeeInfo(userEmail);
+    
+    if (!employeeInfo) {
+      Logger.log(`認証失敗: 従業員マスタに存在しません - ${userEmail}`);
+      throw new Error('認証失敗: 従業員マスタに登録されていません');
+    }
+    
+    Logger.log(`認証成功: ${employeeInfo.name} (${employeeInfo.id})`);
+    
+    // アクセスログを記録
+    logAccess('LOGIN', employeeInfo.id, `認証成功: ${userEmail}`);
+    
+    return employeeInfo;
+    
+  }, 'Authentication.authenticateUserFromEvent', 'HIGH', {
+    eventParameter: e ? e.parameter : null,
+    sessionUser: Session.getActiveUser().getEmail()
+  });
+}
+
+/**
+ * 指定されたフィールドで従業員を検索する共通ヘルパー関数
+ * @param {number} fieldIndex - 検索するフィールドのインデックス（0ベース）
+ * @param {string} searchValue - 検索値
+ * @param {boolean} caseSensitive - 大文字小文字を区別するかどうか（デフォルト: false）
  * @returns {Object|null} 従業員情報またはnull
  */
-function getEmployeeInfo(email) {
-  return withErrorHandling(() => {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Master_Employee');
+function findEmployeeByField(fieldIndex, searchValue, caseSensitive = false) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Master_Employee');
+  
+  if (!sheet) {
+    throw new Error('Master_Employeeシートが見つかりません');
+  }
+  
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) {
+    return null;
+  }
+  
+  const data = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+  
+  // 指定されたフィールドで検索
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const fieldValue = row[fieldIndex];
     
-    if (!sheet) {
-      throw new Error('Master_Employeeシートが見つかりません');
-    }
-    
-    // データ範囲を取得（ヘッダー行を除く）
-    const lastRow = sheet.getLastRow();
-    if (lastRow <= 1) {
-      Logger.log('従業員マスタにデータが存在しません');
-      return null;
-    }
-    
-    const data = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
-    
-    // メールアドレスで検索（列C: Gmail）
-    for (let i = 0; i < data.length; i++) {
-      const row = data[i];
-      if (row[2] && row[2].toString().toLowerCase() === email.toLowerCase()) {
+    if (fieldValue) {
+      const fieldStr = fieldValue.toString();
+      const searchStr = searchValue.toString();
+      
+      const isMatch = caseSensitive 
+        ? fieldStr === searchStr
+        : fieldStr.toLowerCase() === searchStr.toLowerCase();
+      
+      if (isMatch) {
         return {
           id: row[0],           // 列A: 社員ID
           name: row[1],         // 列B: 氏名
@@ -77,8 +144,20 @@ function getEmployeeInfo(email) {
         };
       }
     }
-    
-    return null;
+  }
+  
+  return null;
+}
+
+/**
+ * メールアドレスから従業員情報を取得
+ * @param {string} email - 検索するメールアドレス
+ * @returns {Object|null} 従業員情報またはnull
+ */
+function getEmployeeInfo(email) {
+  return withErrorHandling(() => {
+    // メールアドレスで検索（列C: Gmail、インデックス2）
+    return findEmployeeByField(2, email, false);
     
   }, 'Authentication.getEmployeeInfo', 'MEDIUM', {
     email: email
@@ -114,7 +193,9 @@ function validateEmployeeAccess(email) {
     Logger.log(`アクセス権限検証エラー: ${error.message}`);
     return false;
   }
-}/**
+}
+
+/**
  *
  承認者権限を検証
  * @param {string} email - 検証するメールアドレス
@@ -164,37 +245,8 @@ function validateApprovalAccess(email, targetEmployeeId) {
  */
 function getEmployeeById(employeeId) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Master_Employee');
-    
-    if (!sheet) {
-      throw new Error('Master_Employeeシートが見つかりません');
-    }
-    
-    const lastRow = sheet.getLastRow();
-    if (lastRow <= 1) {
-      return null;
-    }
-    
-    const data = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
-    
-    // 社員IDで検索（列A: 社員ID）
-    for (let i = 0; i < data.length; i++) {
-      const row = data[i];
-      if (row[0] && row[0].toString() === employeeId.toString()) {
-        return {
-          id: row[0],
-          name: row[1],
-          email: row[2],
-          department: row[3],
-          employmentType: row[4],
-          supervisorEmail: row[5],
-          startTime: row[6],
-          endTime: row[7]
-        };
-      }
-    }
-    
-    return null;
+    // 社員IDで検索（列A: 社員ID、インデックス0）
+    return findEmployeeByField(0, employeeId, true);
     
   } catch (error) {
     Logger.log(`従業員情報取得エラー (ID検索): ${error.message}`);
@@ -337,6 +389,63 @@ function requireAuthentication(callback) {
 }
 
 /**
+ * WebAppのデプロイメント設定を確認する
+ * @returns {Object} デプロイメント設定情報
+ */
+function checkDeploymentSettings() {
+  try {
+    const deploymentInfo = {
+      sessionUser: null,
+      sessionUserEmail: null,
+      hasActiveUser: false,
+      deploymentMode: 'Unknown',
+      recommendations: []
+    };
+    
+    // セッション情報の確認
+    try {
+      const activeUser = Session.getActiveUser();
+      deploymentInfo.hasActiveUser = activeUser !== null;
+      
+      if (activeUser) {
+        deploymentInfo.sessionUser = activeUser;
+        deploymentInfo.sessionUserEmail = activeUser.getEmail();
+      }
+    } catch (error) {
+      deploymentInfo.recommendations.push('Session.getActiveUser()でエラーが発生: ' + error.message);
+    }
+    
+    // デプロイメントモードの推定
+    if (deploymentInfo.hasActiveUser && deploymentInfo.sessionUserEmail) {
+      deploymentInfo.deploymentMode = 'Execute as: Me, Who has access: Anyone';
+    } else if (deploymentInfo.hasActiveUser && !deploymentInfo.sessionUserEmail) {
+      deploymentInfo.deploymentMode = 'Execute as: Me, Who has access: Anyone with Google Account';
+    } else {
+      deploymentInfo.deploymentMode = 'Execute as: User accessing the web app';
+      deploymentInfo.recommendations.push('デプロイメント設定を「Execute as: Me」に変更することを推奨します');
+    }
+    
+    // 推奨事項の追加
+    if (!deploymentInfo.sessionUserEmail) {
+      deploymentInfo.recommendations.push('Session.getActiveUser().getEmail()がnullを返しています');
+      deploymentInfo.recommendations.push('WebAppのデプロイメント設定で「Execute as: Me」を選択してください');
+      deploymentInfo.recommendations.push('または、イベントパラメータからemailを取得する方法を使用してください');
+    }
+    
+    Logger.log('デプロイメント設定確認結果: ' + JSON.stringify(deploymentInfo, null, 2));
+    
+    return deploymentInfo;
+    
+  } catch (error) {
+    Logger.log(`デプロイメント設定確認エラー: ${error.message}`);
+    return {
+      error: error.message,
+      recommendations: ['デプロイメント設定の確認に失敗しました']
+    };
+  }
+}
+
+/**
  * 承認権限が必要な処理を実行するラッパー関数
  * @param {string} targetEmployeeId - 対象従業員ID
  * @param {Function} callback - 実行する関数
@@ -355,5 +464,59 @@ function requireApprovalAccess(targetEmployeeId, callback) {
   } catch (error) {
     Logger.log(`承認権限必須処理でエラー: ${error.message}`);
     throw error;
+  }
+}
+
+/**
+ * 新しい認証機能のテスト
+ */
+function testNewAuthenticationMethods() {
+  try {
+    Logger.log('=== 新しい認証機能テスト開始 ===');
+    
+    // 1. デプロイメント設定確認テスト
+    Logger.log('1. デプロイメント設定確認テスト');
+    const deploymentInfo = checkDeploymentSettings();
+    Logger.log('デプロイメント情報: ' + JSON.stringify(deploymentInfo, null, 2));
+    
+    // 2. 従来の認証方法テスト
+    Logger.log('2. 従来の認証方法テスト');
+    try {
+      const user1 = authenticateUser();
+      Logger.log('✓ 従来の認証成功: ' + user1.name);
+    } catch (error) {
+      Logger.log('✗ 従来の認証失敗: ' + error.message);
+    }
+    
+    // 3. イベントベース認証テスト（モックイベント）
+    Logger.log('3. イベントベース認証テスト');
+    try {
+      const mockEvent = {
+        parameter: {
+          email: Session.getActiveUser().getEmail()
+        }
+      };
+      const user2 = authenticateUserFromEvent(mockEvent);
+      Logger.log('✓ イベントベース認証成功: ' + user2.name);
+    } catch (error) {
+      Logger.log('✗ イベントベース認証失敗: ' + error.message);
+    }
+    
+    // 4. イベントベース認証テスト（emailパラメータなし）
+    Logger.log('4. イベントベース認証テスト（emailパラメータなし）');
+    try {
+      const mockEvent2 = {
+        parameter: {}
+      };
+      const user3 = authenticateUserFromEvent(mockEvent2);
+      Logger.log('✓ フォールバック認証成功: ' + user3.name);
+    } catch (error) {
+      Logger.log('✗ フォールバック認証失敗: ' + error.message);
+    }
+    
+    Logger.log('=== 新しい認証機能テスト完了 ===');
+    
+  } catch (error) {
+    Logger.log('新しい認証機能テストエラー: ' + error.toString());
   }
 }
