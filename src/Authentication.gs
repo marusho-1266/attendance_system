@@ -4,6 +4,96 @@
  */
 
 /**
+ * メールアドレスの形式を検証
+ * @param {string} email - 検証するメールアドレス
+ * @returns {boolean} 有効なメールアドレス形式かどうか
+ */
+function validateEmailFormat(email) {
+  if (!email || typeof email !== 'string') {
+    return false;
+  }
+  
+  // 基本的なメールアドレス形式の正規表現
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  
+  // 基本的な形式チェック
+  if (!emailRegex.test(email)) {
+    return false;
+  }
+  
+  // 追加のセキュリティチェック
+  const emailLower = email.toLowerCase();
+  
+  // 危険な文字やパターンのチェック
+  const dangerousPatterns = [
+    /<script/i,
+    /javascript:/i,
+    /data:/i,
+    /vbscript:/i,
+    /on\w+\s*=/i,
+    /<iframe/i,
+    /<object/i,
+    /<embed/i
+  ];
+  
+  for (const pattern of dangerousPatterns) {
+    if (pattern.test(emailLower)) {
+      return false;
+    }
+  }
+  
+  // 長さチェック（RFC 5321準拠）
+  if (email.length > 254) {
+    return false;
+  }
+  
+  // ローカル部分とドメイン部分の長さチェック
+  const parts = email.split('@');
+  if (parts.length !== 2) {
+    return false;
+  }
+  
+  const localPart = parts[0];
+  const domainPart = parts[1];
+  
+  if (localPart.length > 64 || domainPart.length > 253) {
+    return false;
+  }
+  
+  return true;
+}
+
+/**
+ * イベントの信頼性を検証
+ * @param {Object} e - WebAppイベントオブジェクト
+ * @returns {boolean} 信頼できるイベントかどうか
+ */
+function validateEventTrust(e) {
+  if (!e) {
+    return false;
+  }
+  
+  // セッションからの認証確認
+  try {
+    const activeUser = Session.getActiveUser();
+    if (activeUser && activeUser.getEmail()) {
+      // セッションが有効な場合は信頼できる
+      return true;
+    }
+  } catch (error) {
+    Logger.log(`セッション認証チェックエラー: ${error.message}`);
+  }
+  
+  // イベントの発生元チェック（必要に応じて拡張）
+  // 例: ContentService.getMimeType()、特定のヘッダー値など
+  
+  // 現在は基本的なチェックのみ
+  // 将来的にはCSRFトークン、署名検証などを追加可能
+  
+  return false;
+}
+
+/**
  * 現在のユーザーを認証し、従業員情報を取得
  * @returns {Object} 認証された従業員情報
  * @throws {Error} 認証失敗時
@@ -50,18 +140,39 @@ function authenticateUserFromEvent(e) {
   return withErrorHandling(() => {
     let userEmail = null;
     
-    // 1. イベントパラメータからメールアドレスを取得
+    // 1. イベントパラメータからメールアドレスを取得（セキュリティ検証付き）
     if (e && e.parameter && e.parameter.email) {
-      userEmail = e.parameter.email;
-      Logger.log(`イベントパラメータからメールアドレスを取得: ${userEmail}`);
+      const eventEmail = e.parameter.email;
+      
+      // メールアドレスの形式検証
+      if (!validateEmailFormat(eventEmail)) {
+        Logger.log(`セキュリティ警告: 無効なメールアドレス形式 - ${eventEmail}`);
+        throw new Error('セキュリティエラー: 無効なメールアドレス形式です');
+      }
+      
+      // イベントの信頼性検証
+      if (!validateEventTrust(e)) {
+        Logger.log(`セキュリティ警告: 信頼できないイベントソース - ${eventEmail}`);
+        throw new Error('セキュリティエラー: 信頼できないイベントソースです');
+      }
+      
+      userEmail = eventEmail;
+      Logger.log(`イベントパラメータからメールアドレスを取得（検証済み）: ${userEmail}`);
     }
     
     // 2. イベントパラメータにない場合は、セッションから取得を試行
     if (!userEmail) {
       try {
-        userEmail = Session.getActiveUser().getEmail();
-        if (userEmail) {
-          Logger.log(`セッションからメールアドレスを取得: ${userEmail}`);
+        const sessionEmail = Session.getActiveUser().getEmail();
+        if (sessionEmail) {
+          // セッションから取得したメールアドレスも形式検証
+          if (!validateEmailFormat(sessionEmail)) {
+            Logger.log(`セキュリティ警告: セッションから無効なメールアドレス形式 - ${sessionEmail}`);
+            throw new Error('セキュリティエラー: セッションから無効なメールアドレス形式です');
+          }
+          
+          userEmail = sessionEmail;
+          Logger.log(`セッションからメールアドレスを取得（検証済み）: ${userEmail}`);
         }
       } catch (error) {
         Logger.log(`セッションからのメールアドレス取得に失敗: ${error.message}`);
@@ -93,7 +204,10 @@ function authenticateUserFromEvent(e) {
     
   }, 'Authentication.authenticateUserFromEvent', 'HIGH', {
     eventParameter: e ? e.parameter : null,
-    sessionUser: Session.getActiveUser().getEmail()
+    sessionUser: (() => {
+      const activeUser = Session.getActiveUser();
+      return activeUser ? activeUser.getEmail() : null;
+    })()
   });
 }
 

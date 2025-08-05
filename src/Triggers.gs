@@ -111,8 +111,7 @@ function weeklyOvertimeJob() {
     Logger.log(`weeklyOvertimeJob開始: ${formatTime(startTime, 'YYYY-MM-DD HH:MM:SS')}`);
     
     // 残業警告閾値を取得
-    const businessRules = getConfig('BUSINESS');
-    const overtimeThreshold = businessRules.OVERTIME_WARNING_THRESHOLD_HOURS;
+    const overtimeThreshold = getOvertimeWarningThresholdHours();
     
     // 過去4週間の期間を計算
     const endDate = addDays(getToday(), -1); // 昨日まで
@@ -1903,8 +1902,7 @@ function generateOvertimeReportForJob(startDate, endDate) {
     
     try {
       // 残業監視レポートを生成・エクスポート
-      const businessRules = getConfig('BUSINESS');
-      const overtimeThreshold = businessRules.OVERTIME_WARNING_THRESHOLD_HOURS;
+      const overtimeThreshold = getOvertimeWarningThresholdHours();
       const result = generateAndExportOvertimeReport(overtimeThreshold, 4, '残業監視レポート');
       
       if (result.success) {

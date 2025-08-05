@@ -42,6 +42,19 @@ function generateCsrfToken(userEmail) {
 function saveCsrfToken(userEmail, token, expiryMinutes = 30) {
   try {
     const tokenSheet = getSheet('CSRF_Tokens');
+    
+    // シートの存在チェック
+    if (!tokenSheet) {
+      Logger.log('CSRF_Tokensシートが見つかりません。シートを作成します。');
+      try {
+        createCsrfTokensSheet();
+        Logger.log('CSRF_Tokensシートを作成しました');
+      } catch (createError) {
+        Logger.log(`CSRF_Tokensシート作成エラー: ${createError.toString()}`);
+        throw new Error('CSRF_Tokensシートの作成に失敗しました');
+      }
+    }
+    
     const expiryTime = new Date(Date.now() + (expiryMinutes * 60 * 1000));
     
     // 最適化: 既存のトークンを効率的に削除
@@ -66,6 +79,18 @@ function saveCsrfToken(userEmail, token, expiryMinutes = 30) {
 function validateCsrfToken(userEmail, token) {
   try {
     const tokenSheet = getSheet('CSRF_Tokens');
+    
+    // シートの存在チェック
+    if (!tokenSheet) {
+      Logger.log('CSRF_Tokensシートが見つかりません。シートを作成します。');
+      try {
+        createCsrfTokensSheet();
+        Logger.log('CSRF_Tokensシートを作成しました');
+      } catch (createError) {
+        Logger.log(`CSRF_Tokensシート作成エラー: ${createError.toString()}`);
+        return false;
+      }
+    }
     
     // 最適化: 特定のユーザーのトークンのみを検索
     const userToken = findCsrfTokenByUser(tokenSheet, userEmail);
@@ -107,6 +132,18 @@ function validateCsrfToken(userEmail, token) {
 function cleanupExpiredCsrfTokens() {
   try {
     const tokenSheet = getSheet('CSRF_Tokens');
+    
+    // シートの存在チェック
+    if (!tokenSheet) {
+      Logger.log('CSRF_Tokensシートが見つかりません。シートを作成します。');
+      try {
+        createCsrfTokensSheet();
+        Logger.log('CSRF_Tokensシートを作成しました');
+      } catch (createError) {
+        Logger.log(`CSRF_Tokensシート作成エラー: ${createError.toString()}`);
+        return; // クリーンアップは失敗しても処理を継続
+      }
+    }
     
     // 最適化: 期限切れトークンの効率的な削除
     removeExpiredCsrfTokens(tokenSheet);

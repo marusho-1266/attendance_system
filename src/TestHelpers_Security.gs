@@ -38,7 +38,8 @@ function testAccessControls() {
     
     accessFunctions.forEach(funcName => {
       try {
-        const func = eval(funcName);
+        // eval()の代わりに安全な方法で関数の存在確認
+        const func = this[funcName] || globalThis[funcName];
         if (typeof func !== 'function') {
           allExist = false;
         }

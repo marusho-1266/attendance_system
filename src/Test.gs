@@ -600,6 +600,52 @@ function testCalculateOvertime() {
   }
 }
 
+function testNightShiftWorkTime() {
+  try {
+    // テスト用の従業員情報
+    const employeeInfo = {
+      employeeId: 'TEST001',
+      name: 'テスト太郎',
+      standardStartTime: '09:00',
+      standardEndTime: '17:00',
+      standardWorkMinutes: 480
+    };
+    
+    // 深夜シフトのテストケース (22:00-06:00)
+    const timeEntries = {
+      clockIn: '22:00',
+      clockOut: '06:00',
+      breakIn: '02:00',
+      breakOut: '03:00'
+    };
+    
+    const result = calculateDailyWorkTime('TEST001', new Date('2024-01-15'), employeeInfo, timeEntries);
+    
+    if (!result || typeof result !== 'object') {
+      return { success: false, message: '深夜シフト: 戻り値がオブジェクトではありません' };
+    }
+    
+    if (result.status !== 'COMPLETE') {
+      return { success: false, message: `深夜シフトステータスエラー: 期待値COMPLETE, 実際${result.status}` };
+    }
+    
+    // 深夜シフトの勤務時間が正しく計算されているかチェック（480分 = 8時間、休憩60分控除）
+    if (result.workMinutes !== 420) {
+      return { success: false, message: `深夜シフト勤務時間エラー: 期待値420, 実際${result.workMinutes}` };
+    }
+    
+    // 深夜勤務時間が正しく計算されているかチェック（22:00-24:00 + 00:00-06:00 = 420分）
+    if (result.nightWorkMinutes !== 420) {
+      return { success: false, message: `深夜勤務時間エラー: 期待値420, 実際${result.nightWorkMinutes}` };
+    }
+    
+    return { success: true, message: '深夜シフト勤務時間計算テスト成功' };
+    
+  } catch (error) {
+    return { success: false, message: `深夜シフト勤務時間計算エラー: ${error.message}` };
+  }
+}
+
 function testApplyBreakDeduction() {
   try {
     // テストケース1: 6時間超過（45分控除）
@@ -769,7 +815,19 @@ function testCalculateTimeDifference() {
       return { success: false, message: `時間差計算エラー: 期待値0, 実際${diff2}` };
     }
     
-    return { success: true, message: '時間差計算テスト成功' };
+    // テストケース3: 深夜シフト (22:00-06:00) = 480分
+    const diff3 = calculateTimeDifference('22:00', '06:00');
+    if (diff3 !== 480) {
+      return { success: false, message: `深夜シフト時間差計算エラー: 期待値480, 実際${diff3}` };
+    }
+    
+    // テストケース4: 深夜シフト (23:00-05:00) = 360分
+    const diff4 = calculateTimeDifference('23:00', '05:00');
+    if (diff4 !== 360) {
+      return { success: false, message: `深夜シフト時間差計算エラー: 期待値360, 実際${diff4}` };
+    }
+    
+    return { success: true, message: '時間差計算テスト成功（深夜シフト対応）' };
     
   } catch (error) {
     return { success: false, message: `時間差計算エラー: ${error.message}` };
@@ -835,6 +893,39 @@ function testFormatTime() {
     
   } catch (error) {
     return { success: false, message: `時刻フォーマットエラー: ${error.message}` };
+  }
+}
+
+function testCalculateNightWorkTime() {
+  try {
+    // テストケース1: 通常勤務 (9:00-17:00) = 0分（深夜勤務なし）
+    const night1 = calculateNightWorkTime('09:00', '17:00');
+    if (night1 !== 0) {
+      return { success: false, message: `深夜勤務計算エラー: 期待値0, 実際${night1}` };
+    }
+    
+    // テストケース2: 深夜勤務 (22:00-06:00) = 420分（22:00-24:00 + 00:00-06:00）
+    const night2 = calculateNightWorkTime('22:00', '06:00');
+    if (night2 !== 420) {
+      return { success: false, message: `深夜勤務計算エラー: 期待値420, 実際${night2}` };
+    }
+    
+    // テストケース3: 深夜勤務 (23:00-05:00) = 360分（23:00-24:00 + 00:00-05:00）
+    const night3 = calculateNightWorkTime('23:00', '05:00');
+    if (night3 !== 360) {
+      return { success: false, message: `深夜勤務計算エラー: 期待値360, 実際${night3}` };
+    }
+    
+    // テストケース4: 深夜勤務 (01:00-07:00) = 240分（01:00-05:00）
+    const night4 = calculateNightWorkTime('01:00', '07:00');
+    if (night4 !== 240) {
+      return { success: false, message: `深夜勤務計算エラー: 期待値240, 実際${night4}` };
+    }
+    
+    return { success: true, message: '深夜勤務時間計算テスト成功' };
+    
+  } catch (error) {
+    return { success: false, message: `深夜勤務時間計算エラー: ${error.message}` };
   }
 }
 
@@ -1384,11 +1475,11 @@ function showTestCoverage() {
       },
       'BusinessLogic.gs': {
         functions: ['calculateDailyWorkTime', 'calculateOvertime', 'applyBreakDeduction', 'calculateLateAndEarlyLeave', 'updateDailySummary'],
-        tests: ['testCalculateDailyWorkTime', 'testCalculateOvertime', 'testApplyBreakDeduction', 'testCalculateLateAndEarlyLeave', 'testUpdateDailySummary']
+        tests: ['testCalculateDailyWorkTime', 'testCalculateOvertime', 'testNightShiftWorkTime', 'testApplyBreakDeduction', 'testCalculateLateAndEarlyLeave', 'testUpdateDailySummary']
       },
       'Utils.gs': {
-        functions: ['isHoliday', 'timeToMinutes', 'minutesToTime', 'calculateTimeDifference', 'getSheetData', 'formatDate', 'formatTime'],
-        tests: ['testIsHoliday', 'testTimeToMinutes', 'testMinutesToTime', 'testCalculateTimeDifference', 'testGetSheetData', 'testFormatDate', 'testFormatTime']
+            functions: ['isHoliday', 'timeToMinutes', 'minutesToTime', 'calculateTimeDifference', 'calculateNightWorkTime', 'getSheetData', 'formatDate', 'formatTime'],
+    tests: ['testIsHoliday', 'testTimeToMinutes', 'testMinutesToTime', 'testCalculateTimeDifference', 'testCalculateNightWorkTime', 'testGetSheetData', 'testFormatDate', 'testFormatTime']
       },
       'WebApp.gs': {
         functions: ['processTimeEntry', 'validateTimeEntry', 'recordTimeEntry', 'createJsonResponse', 'getActionName'],

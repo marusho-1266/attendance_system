@@ -41,6 +41,28 @@ const ERROR_CONFIG = {
   }
 };
 
+// ========== カスタムエラークラス ==========
+
+/**
+ * 未実装機能を示すエラークラス
+ */
+class NotImplementedError extends Error {
+  constructor(message = 'この機能はまだ実装されていません') {
+    super(message);
+    this.name = 'NotImplementedError';
+  }
+}
+
+/**
+ * 入力検証エラークラス
+ */
+class ValidationError extends Error {
+  constructor(message = '入力パラメータが無効です') {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
 // ========== エラーログ記録機能 ==========
 
 /**
@@ -575,43 +597,182 @@ function scheduleChunkContinuation(items, processor, options, startIndex) {
 
 /**
  * 関数名から関数参照を取得する安全なマッピング
+ * 各関数は入力パラメータの検証と適切なエラーハンドリングを含む
  * @type {Object.<string, Function>}
  */
 const FUNCTION_MAPPING = {
-  // 従業員関連の処理関数
+  /**
+   * 従業員データ処理のデフォルト実装
+   * @param {Object} employee - 従業員データオブジェクト（employeeId, name, email等を含む）
+   * @param {number} index - 処理インデックス（0以上の整数）
+   * @return {Object} 処理結果オブジェクト {employeeId: string, processed: boolean, index: number, ...}
+   * @throws {ValidationError} 必要な入力パラメータが不足または無効な場合
+   * @throws {NotImplementedError} この機能はまだ実装されていません
+   */
   'processEmployeeData': function(employee, index) {
-    // 従業員データ処理のデフォルト実装
-    return { employeeId: employee.employeeId, processed: true, index: index };
+    // 入力パラメータの詳細検証
+    if (!employee || typeof employee !== 'object') {
+      throw new ValidationError('従業員データオブジェクトが必要です。null、undefined、または非オブジェクト値は受け付けません。');
+    }
+    if (!employee.employeeId || typeof employee.employeeId !== 'string') {
+      throw new ValidationError('従業員IDが必要です。文字列形式の有効な従業員IDを指定してください。');
+    }
+    if (employee.employeeId.trim() === '') {
+      throw new ValidationError('従業員IDは空文字列であってはいけません。');
+    }
+    if (typeof index !== 'number' || !Number.isInteger(index) || index < 0) {
+      throw new ValidationError('有効なインデックスが必要です。0以上の整数を指定してください。');
+    }
+    
+    // 未実装機能を示すエラーをスロー（より詳細な情報を含む）
+    throw new NotImplementedError(
+      `従業員データ処理機能はまだ実装されていません。` +
+      `従業員ID: ${employee.employeeId}, インデックス: ${index}。` +
+      `具体的なビジネスロジック（データ検証、変換、保存等）を実装してください。`
+    );
   },
   
-  // 残業時間計算関数
+  /**
+   * 残業時間計算のデフォルト実装
+   * @param {Object} employee - 従業員データオブジェクト（employeeId, workHours等を含む）
+   * @param {number} index - 処理インデックス（0以上の整数）
+   * @return {Object} 残業時間計算結果オブジェクト {employeeId: string, overtimeHours: number, index: number, ...}
+   * @throws {ValidationError} 必要な入力パラメータが不足または無効な場合
+   * @throws {NotImplementedError} この機能はまだ実装されていません
+   */
   'calculateOvertime': function(employee, index) {
-    // 残業時間計算のデフォルト実装
-    return { employeeId: employee.employeeId, overtimeHours: 0, index: index };
+    // 入力パラメータの詳細検証
+    if (!employee || typeof employee !== 'object') {
+      throw new ValidationError('従業員データオブジェクトが必要です。null、undefined、または非オブジェクト値は受け付けません。');
+    }
+    if (!employee.employeeId || typeof employee.employeeId !== 'string') {
+      throw new ValidationError('従業員IDが必要です。文字列形式の有効な従業員IDを指定してください。');
+    }
+    if (employee.employeeId.trim() === '') {
+      throw new ValidationError('従業員IDは空文字列であってはいけません。');
+    }
+    if (typeof index !== 'number' || !Number.isInteger(index) || index < 0) {
+      throw new ValidationError('有効なインデックスが必要です。0以上の整数を指定してください。');
+    }
+    
+    // 未実装機能を示すエラーをスロー（より詳細な情報を含む）
+    throw new NotImplementedError(
+      `残業時間計算機能はまだ実装されていません。` +
+      `従業員ID: ${employee.employeeId}, インデックス: ${index}。` +
+      `勤怠データの取得、労働時間計算ロジック、残業時間の算出処理を実装してください。`
+    );
   },
   
-  // 月次サマリー計算関数
+  /**
+   * 月次サマリー計算のデフォルト実装
+   * @param {Object} employee - 従業員データオブジェクト（employeeId, monthlyData等を含む）
+   * @param {number} index - 処理インデックス（0以上の整数）
+   * @return {Object} 月次サマリー計算結果オブジェクト {employeeId: string, monthlyData: Object, index: number, ...}
+   * @throws {ValidationError} 必要な入力パラメータが不足または無効な場合
+   * @throws {NotImplementedError} この機能はまだ実装されていません
+   */
   'calculateMonthlySummary': function(employee, index) {
-    // 月次サマリー計算のデフォルト実装
-    return { employeeId: employee.employeeId, monthlyData: {}, index: index };
+    // 入力パラメータの詳細検証
+    if (!employee || typeof employee !== 'object') {
+      throw new ValidationError('従業員データオブジェクトが必要です。null、undefined、または非オブジェクト値は受け付けません。');
+    }
+    if (!employee.employeeId || typeof employee.employeeId !== 'string') {
+      throw new ValidationError('従業員IDが必要です。文字列形式の有効な従業員IDを指定してください。');
+    }
+    if (employee.employeeId.trim() === '') {
+      throw new ValidationError('従業員IDは空文字列であってはいけません。');
+    }
+    if (typeof index !== 'number' || !Number.isInteger(index) || index < 0) {
+      throw new ValidationError('有効なインデックスが必要です。0以上の整数を指定してください。');
+    }
+    
+    // 未実装機能を示すエラーをスロー（より詳細な情報を含む）
+    throw new NotImplementedError(
+      `月次サマリー計算機能はまだ実装されていません。` +
+      `従業員ID: ${employee.employeeId}, インデックス: ${index}。` +
+      `月次データの集計、統計計算、サマリーレポート生成ロジックを実装してください。`
+    );
   },
   
-  // 承認処理関数
+  /**
+   * 承認処理のデフォルト実装
+   * @param {Object} request - 承認リクエストオブジェクト（requestId, status, approver等を含む）
+   * @param {number} index - 処理インデックス（0以上の整数）
+   * @return {Object} 承認処理結果オブジェクト {requestId: string, approved: boolean, index: number, ...}
+   * @throws {ValidationError} 必要な入力パラメータが不足または無効な場合
+   * @throws {NotImplementedError} この機能はまだ実装されていません
+   */
   'processApproval': function(request, index) {
-    // 承認処理のデフォルト実装
-    return { requestId: request.requestId, approved: false, index: index };
+    // 入力パラメータの詳細検証
+    if (!request || typeof request !== 'object') {
+      throw new ValidationError('承認リクエストオブジェクトが必要です。null、undefined、または非オブジェクト値は受け付けません。');
+    }
+    if (!request.requestId || typeof request.requestId !== 'string') {
+      throw new ValidationError('リクエストIDが必要です。文字列形式の有効なリクエストIDを指定してください。');
+    }
+    if (request.requestId.trim() === '') {
+      throw new ValidationError('リクエストIDは空文字列であってはいけません。');
+    }
+    if (typeof index !== 'number' || !Number.isInteger(index) || index < 0) {
+      throw new ValidationError('有効なインデックスが必要です。0以上の整数を指定してください。');
+    }
+    
+    // 未実装機能を示すエラーをスロー（より詳細な情報を含む）
+    throw new NotImplementedError(
+      `承認処理機能はまだ実装されていません。` +
+      `リクエストID: ${request.requestId}, インデックス: ${index}。` +
+      `承認ワークフロー、ステータス更新、通知送信ロジックを実装してください。`
+    );
   },
   
-  // データ検証関数
+  /**
+   * データ検証のデフォルト実装
+   * @param {*} item - 検証対象のデータアイテム（任意の型）
+   * @param {number} index - 処理インデックス（0以上の整数）
+   * @return {Object} データ検証結果オブジェクト {item: *, valid: boolean, index: number, errors: Array}
+   * @throws {ValidationError} 必要な入力パラメータが不足または無効な場合
+   * @throws {NotImplementedError} この機能はまだ実装されていません
+   */
   'validateData': function(item, index) {
-    // データ検証のデフォルト実装
-    return { item: item, valid: true, index: index };
+    // 入力パラメータの詳細検証
+    if (item === undefined || item === null) {
+      throw new ValidationError('検証対象のデータアイテムが必要です。undefinedまたはnullは受け付けません。');
+    }
+    if (typeof index !== 'number' || !Number.isInteger(index) || index < 0) {
+      throw new ValidationError('有効なインデックスが必要です。0以上の整数を指定してください。');
+    }
+    
+    // 未実装機能を示すエラーをスロー（より詳細な情報を含む）
+    throw new NotImplementedError(
+      `データ検証機能はまだ実装されていません。` +
+      `データ型: ${typeof item}, インデックス: ${index}。` +
+      `具体的な検証ルール、バリデーションロジック、エラー報告機能を実装してください。`
+    );
   },
   
-  // レポート生成関数
+  /**
+   * レポート生成のデフォルト実装
+   * @param {*} data - レポート生成用データ（任意の型）
+   * @param {number} index - 処理インデックス（0以上の整数）
+   * @return {Object} レポート生成結果オブジェクト {data: *, reportGenerated: boolean, index: number, reportUrl: string}
+   * @throws {ValidationError} 必要な入力パラメータが不足または無効な場合
+   * @throws {NotImplementedError} この機能はまだ実装されていません
+   */
   'generateReport': function(data, index) {
-    // レポート生成のデフォルト実装
-    return { data: data, reportGenerated: true, index: index };
+    // 入力パラメータの詳細検証
+    if (data === undefined || data === null) {
+      throw new ValidationError('レポート生成用データが必要です。undefinedまたはnullは受け付けません。');
+    }
+    if (typeof index !== 'number' || !Number.isInteger(index) || index < 0) {
+      throw new ValidationError('有効なインデックスが必要です。0以上の整数を指定してください。');
+    }
+    
+    // 未実装機能を示すエラーをスロー（より詳細な情報を含む）
+    throw new NotImplementedError(
+      `レポート生成機能はまだ実装されていません。` +
+      `データ型: ${typeof data}, インデックス: ${index}。` +
+      `レポートテンプレート、データフォーマット、PDF/Excel生成ロジックを実装してください。`
+    );
   }
 };
 
@@ -635,28 +796,145 @@ function getFunctionByName(functionName) {
 }
 
 /**
- * FUNCTION_MAPPINGに新しい関数を追加
- * @param {string} functionName - 関数名
- * @param {Function} func - 関数参照
+ * 保護対象のシステム関数名リスト
+ * これらの関数は削除を防ぐため、unregisterFunctionで保護されます
+ * @type {Array.<string>}
  */
-function registerFunction(functionName, func) {
-  if (!functionName || typeof func !== 'function') {
-    throw new Error('関数名と関数参照の両方が必要です');
+const PROTECTED_FUNCTIONS = [
+  'processEmployeeData',
+  'calculateOvertime', 
+  'calculateMonthlySummary',
+  'processApproval',
+  'validateData',
+  'generateReport'
+];
+
+/**
+ * 期待される関数シグネチャの定義
+ * @type {Object.<string, Object>}
+ */
+const EXPECTED_SIGNATURES = {
+  'processEmployeeData': { minParams: 2, maxParams: 2, paramTypes: ['object', 'number'] },
+  'calculateOvertime': { minParams: 2, maxParams: 2, paramTypes: ['object', 'number'] },
+  'calculateMonthlySummary': { minParams: 2, maxParams: 2, paramTypes: ['object', 'number'] },
+  'processApproval': { minParams: 2, maxParams: 2, paramTypes: ['object', 'number'] },
+  'validateData': { minParams: 2, maxParams: 2, paramTypes: ['*', 'number'] },
+  'generateReport': { minParams: 2, maxParams: 2, paramTypes: ['*', 'number'] }
+};
+
+/**
+ * 関数シグネチャを検証する
+ * @param {Function} func - 検証対象の関数
+ * @param {string} functionName - 関数名
+ * @return {boolean} シグネチャが有効な場合true
+ * @throws {ValidationError} シグネチャが無効な場合
+ */
+function validateFunctionSignature(func, functionName) {
+  if (typeof func !== 'function') {
+    throw new ValidationError('関数参照が無効です。関数オブジェクトを指定してください。');
   }
   
-  FUNCTION_MAPPING[functionName] = func;
-  Logger.log(`関数 '${functionName}' をFUNCTION_MAPPINGに登録しました`);
+  // 期待されるシグネチャが定義されている場合のみ検証
+  if (EXPECTED_SIGNATURES[functionName]) {
+    const expected = EXPECTED_SIGNATURES[functionName];
+    const funcStr = func.toString();
+    
+    // 関数のパラメータ数を取得
+    const paramMatch = funcStr.match(/function\s*\(([^)]*)\)/);
+    if (!paramMatch) {
+      throw new ValidationError(`関数 '${functionName}' のパラメータを解析できません。`);
+    }
+    
+    const params = paramMatch[1].split(',').map(p => p.trim()).filter(p => p);
+    
+    // パラメータ数の検証
+    if (params.length < expected.minParams || params.length > expected.maxParams) {
+      throw new ValidationError(
+        `関数 '${functionName}' のパラメータ数が無効です。` +
+        `期待: ${expected.minParams}-${expected.maxParams}個、実際: ${params.length}個`
+      );
+    }
+    
+    Logger.log(`関数 '${functionName}' のシグネチャ検証成功: ${params.length}個のパラメータ`);
+  }
+  
+  return true;
 }
 
 /**
- * FUNCTION_MAPPINGから関数を削除
+ * FUNCTION_MAPPINGに新しい関数を追加（安全性強化版）
  * @param {string} functionName - 関数名
+ * @param {Function} func - 関数参照
+ * @param {boolean} forceOverwrite - 既存関数の上書きを強制するかどうか（デフォルト: false）
+ * @throws {ValidationError} 入力パラメータが無効な場合
+ * @throws {Error} 既存関数が存在し、forceOverwriteがfalseの場合
  */
-function unregisterFunction(functionName) {
-  if (FUNCTION_MAPPING[functionName]) {
-    delete FUNCTION_MAPPING[functionName];
-    Logger.log(`関数 '${functionName}' をFUNCTION_MAPPINGから削除しました`);
+function registerFunction(functionName, func, forceOverwrite = false) {
+  // 入力パラメータの検証
+  if (!functionName || typeof functionName !== 'string') {
+    throw new ValidationError('有効な関数名（文字列）が必要です。');
   }
+  if (functionName.trim() === '') {
+    throw new ValidationError('関数名は空文字列であってはいけません。');
+  }
+  if (typeof func !== 'function') {
+    throw new ValidationError('有効な関数参照が必要です。');
+  }
+  
+  // 既存関数の上書き防止チェック
+  if (FUNCTION_MAPPING[functionName] && !forceOverwrite) {
+    throw new Error(
+      `関数 '${functionName}' は既に登録されています。` +
+      `上書きする場合は forceOverwrite = true を指定してください。`
+    );
+  }
+  
+  // 関数シグネチャの検証
+  try {
+    validateFunctionSignature(func, functionName);
+  } catch (error) {
+    throw new ValidationError(
+      `関数 '${functionName}' のシグネチャ検証に失敗しました: ${error.message}`
+    );
+  }
+  
+  // 関数を登録
+  FUNCTION_MAPPING[functionName] = func;
+  Logger.log(`関数 '${functionName}' をFUNCTION_MAPPINGに登録しました${forceOverwrite ? '（上書き）' : ''}`);
+}
+
+/**
+ * FUNCTION_MAPPINGから関数を削除（安全性強化版）
+ * @param {string} functionName - 関数名
+ * @param {boolean} forceDelete - 保護対象関数の削除を強制するかどうか（デフォルト: false）
+ * @return {boolean} 削除が成功した場合true、保護されているか存在しない場合false
+ * @throws {ValidationError} 入力パラメータが無効な場合
+ */
+function unregisterFunction(functionName, forceDelete = false) {
+  // 入力パラメータの検証
+  if (!functionName || typeof functionName !== 'string') {
+    throw new ValidationError('有効な関数名（文字列）が必要です。');
+  }
+  if (functionName.trim() === '') {
+    throw new ValidationError('関数名は空文字列であってはいけません。');
+  }
+  
+  // 関数が存在しない場合
+  if (!FUNCTION_MAPPING[functionName]) {
+    Logger.log(`関数 '${functionName}' はFUNCTION_MAPPINGに存在しません。`);
+    return false;
+  }
+  
+  // 保護対象関数の削除防止チェック
+  if (PROTECTED_FUNCTIONS.includes(functionName) && !forceDelete) {
+    Logger.log(`関数 '${functionName}' は保護対象のため削除できません。強制削除する場合は forceDelete = true を指定してください。`);
+    return false;
+  }
+  
+  // 関数を削除
+  delete FUNCTION_MAPPING[functionName];
+  Logger.log(`関数 '${functionName}' をFUNCTION_MAPPINGから削除しました${forceDelete ? '（強制削除）' : ''}`);
+  return true;
 }
 
 /**
@@ -1262,6 +1540,129 @@ function testEvalReplacement() {
 }
 
 /**
+ * FUNCTION_MAPPINGの改善をテストする
+ * @return {Object} テスト結果
+ */
+function testFunctionMappingImprovements() {
+  const results = {
+    success: true,
+    tests: [],
+    errors: []
+  };
+  
+  try {
+    Logger.log('=== FUNCTION_MAPPING改善テスト開始 ===');
+    
+    // テスト1: 正常な入力でのNotImplementedError確認
+    try {
+      const testEmployee = { employeeId: 'EMP001', name: 'テスト太郎' };
+      FUNCTION_MAPPING.processEmployeeData(testEmployee, 0);
+      results.tests.push({ name: '正常入力テスト', status: 'FAILED', message: 'NotImplementedErrorがスローされるべきでした' });
+      results.success = false;
+    } catch (error) {
+      if (error instanceof NotImplementedError) {
+        results.tests.push({ name: '正常入力テスト', status: 'PASSED', message: '適切にNotImplementedErrorがスローされました' });
+      } else {
+        results.tests.push({ name: '正常入力テスト', status: 'FAILED', message: `予期しないエラー: ${error.name}` });
+        results.success = false;
+      }
+    }
+    
+    // テスト2: 無効な従業員データでのValidationError確認
+    try {
+      FUNCTION_MAPPING.processEmployeeData(null, 0);
+      results.tests.push({ name: '無効従業員データテスト', status: 'FAILED', message: 'ValidationErrorがスローされるべきでした' });
+      results.success = false;
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        results.tests.push({ name: '無効従業員データテスト', status: 'PASSED', message: '適切にValidationErrorがスローされました' });
+      } else {
+        results.tests.push({ name: '無効従業員データテスト', status: 'FAILED', message: `予期しないエラー: ${error.name}` });
+        results.success = false;
+      }
+    }
+    
+    // テスト3: 空の従業員IDでのValidationError確認
+    try {
+      const testEmployee = { employeeId: '', name: 'テスト太郎' };
+      FUNCTION_MAPPING.processEmployeeData(testEmployee, 0);
+      results.tests.push({ name: '空従業員IDテスト', status: 'FAILED', message: 'ValidationErrorがスローされるべきでした' });
+      results.success = false;
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        results.tests.push({ name: '空従業員IDテスト', status: 'PASSED', message: '適切にValidationErrorがスローされました' });
+      } else {
+        results.tests.push({ name: '空従業員IDテスト', status: 'FAILED', message: `予期しないエラー: ${error.name}` });
+        results.success = false;
+      }
+    }
+    
+    // テスト4: 無効なインデックスでのValidationError確認
+    try {
+      const testEmployee = { employeeId: 'EMP001', name: 'テスト太郎' };
+      FUNCTION_MAPPING.processEmployeeData(testEmployee, -1);
+      results.tests.push({ name: '無効インデックステスト', status: 'FAILED', message: 'ValidationErrorがスローされるべきでした' });
+      results.success = false;
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        results.tests.push({ name: '無効インデックステスト', status: 'PASSED', message: '適切にValidationErrorがスローされました' });
+      } else {
+        results.tests.push({ name: '無効インデックステスト', status: 'FAILED', message: `予期しないエラー: ${error.name}` });
+        results.success = false;
+      }
+    }
+    
+    // テスト5: データ検証関数のテスト
+    try {
+      FUNCTION_MAPPING.validateData(null, 0);
+      results.tests.push({ name: 'データ検証nullテスト', status: 'FAILED', message: 'ValidationErrorがスローされるべきでした' });
+      results.success = false;
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        results.tests.push({ name: 'データ検証nullテスト', status: 'PASSED', message: '適切にValidationErrorがスローされました' });
+      } else {
+        results.tests.push({ name: 'データ検証nullテスト', status: 'FAILED', message: `予期しないエラー: ${error.name}` });
+        results.success = false;
+      }
+    }
+    
+    // テスト6: レポート生成関数のテスト
+    try {
+      const testData = { reportType: 'monthly', data: [] };
+      FUNCTION_MAPPING.generateReport(testData, 0);
+      results.tests.push({ name: 'レポート生成テスト', status: 'FAILED', message: 'NotImplementedErrorがスローされるべきでした' });
+      results.success = false;
+    } catch (error) {
+      if (error instanceof NotImplementedError) {
+        results.tests.push({ name: 'レポート生成テスト', status: 'PASSED', message: '適切にNotImplementedErrorがスローされました' });
+      } else {
+        results.tests.push({ name: 'レポート生成テスト', status: 'FAILED', message: `予期しないエラー: ${error.name}` });
+        results.success = false;
+      }
+    }
+    
+    // テスト結果のログ出力
+    Logger.log('=== テスト結果 ===');
+    results.tests.forEach(test => {
+      Logger.log(`${test.status}: ${test.name} - ${test.message}`);
+    });
+    
+    if (results.success) {
+      Logger.log('✅ すべてのテストが成功しました');
+    } else {
+      Logger.log('❌ 一部のテストが失敗しました');
+    }
+    
+  } catch (error) {
+    results.success = false;
+    results.errors.push(error.toString());
+    Logger.log(`テスト実行中にエラーが発生: ${error.toString()}`);
+  }
+  
+  return results;
+}
+
+/**
  * シートIDを取得
  * 
  * @param {string} sheetName - シート名
@@ -1310,4 +1711,171 @@ function testErrorLogUrlConstruction() {
     logError(error, 'testErrorLogUrlConstruction', 'HIGH');
     return false;
   }
+}
+
+/**
+ * registerFunctionとunregisterFunctionの安全性強化をテストする
+ * @return {Object} テスト結果
+ */
+function testFunctionMappingSafetyImprovements() {
+  const results = {
+    success: true,
+    tests: [],
+    errors: []
+  };
+  
+  try {
+    Logger.log('=== FUNCTION_MAPPING安全性強化テスト開始 ===');
+    
+    // テスト1: 既存関数の上書き防止チェック
+    try {
+      const testFunc = function(employee, index) { return { success: true }; };
+      registerFunction('processEmployeeData', testFunc);
+      results.tests.push({ name: '既存関数上書き防止テスト', status: 'FAILED', message: '既存関数の上書きが防止されるべきでした' });
+      results.success = false;
+    } catch (error) {
+      if (error.message.includes('既に登録されています')) {
+        results.tests.push({ name: '既存関数上書き防止テスト', status: 'PASSED', message: '適切に既存関数の上書きが防止されました' });
+      } else {
+        results.tests.push({ name: '既存関数上書き防止テスト', status: 'FAILED', message: `予期しないエラー: ${error.message}` });
+        results.success = false;
+      }
+    }
+    
+    // テスト2: 強制上書きのテスト
+    try {
+      const testFunc = function(employee, index) { return { success: true }; };
+      registerFunction('processEmployeeData', testFunc, true);
+      results.tests.push({ name: '強制上書きテスト', status: 'PASSED', message: '強制上書きが正常に実行されました' });
+    } catch (error) {
+      results.tests.push({ name: '強制上書きテスト', status: 'FAILED', message: `強制上書きでエラー: ${error.message}` });
+      results.success = false;
+    }
+    
+    // テスト3: 保護対象関数の削除防止チェック
+    try {
+      const result = unregisterFunction('processEmployeeData');
+      if (!result) {
+        results.tests.push({ name: '保護対象関数削除防止テスト', status: 'PASSED', message: '保護対象関数の削除が適切に防止されました' });
+      } else {
+        results.tests.push({ name: '保護対象関数削除防止テスト', status: 'FAILED', message: '保護対象関数が削除されてしまいました' });
+        results.success = false;
+      }
+    } catch (error) {
+      results.tests.push({ name: '保護対象関数削除防止テスト', status: 'FAILED', message: `予期しないエラー: ${error.message}` });
+      results.success = false;
+    }
+    
+    // テスト4: 強制削除のテスト
+    try {
+      const result = unregisterFunction('processEmployeeData', true);
+      if (result) {
+        results.tests.push({ name: '強制削除テスト', status: 'PASSED', message: '強制削除が正常に実行されました' });
+        // 削除された関数を復元
+        const originalFunc = function(employee, index) {
+          if (!employee || typeof employee !== 'object') {
+            throw new ValidationError('従業員データオブジェクトが必要です。null、undefined、または非オブジェクト値は受け付けません。');
+          }
+          if (!employee.employeeId || typeof employee.employeeId !== 'string') {
+            throw new ValidationError('従業員IDが必要です。文字列形式の有効な従業員IDを指定してください。');
+          }
+          if (employee.employeeId.trim() === '') {
+            throw new ValidationError('従業員IDは空文字列であってはいけません。');
+          }
+          if (typeof index !== 'number' || !Number.isInteger(index) || index < 0) {
+            throw new ValidationError('有効なインデックスが必要です。0以上の整数を指定してください。');
+          }
+          throw new NotImplementedError(
+            `従業員データ処理機能はまだ実装されていません。` +
+            `従業員ID: ${employee.employeeId}, インデックス: ${index}。` +
+            `具体的なビジネスロジック（データ検証、変換、保存等）を実装してください。`
+          );
+        };
+        FUNCTION_MAPPING['processEmployeeData'] = originalFunc;
+      } else {
+        results.tests.push({ name: '強制削除テスト', status: 'FAILED', message: '強制削除が失敗しました' });
+        results.success = false;
+      }
+    } catch (error) {
+      results.tests.push({ name: '強制削除テスト', status: 'FAILED', message: `強制削除でエラー: ${error.message}` });
+      results.success = false;
+    }
+    
+    // テスト5: 無効な関数名での登録テスト
+    try {
+      const testFunc = function(employee, index) { return { success: true }; };
+      registerFunction('', testFunc);
+      results.tests.push({ name: '無効関数名テスト', status: 'FAILED', message: '空の関数名が拒否されるべきでした' });
+      results.success = false;
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        results.tests.push({ name: '無効関数名テスト', status: 'PASSED', message: '空の関数名が適切に拒否されました' });
+      } else {
+        results.tests.push({ name: '無効関数名テスト', status: 'FAILED', message: `予期しないエラー: ${error.name}` });
+        results.success = false;
+      }
+    }
+    
+    // テスト6: 無効な関数参照での登録テスト
+    try {
+      registerFunction('testFunction', null);
+      results.tests.push({ name: '無効関数参照テスト', status: 'FAILED', message: 'null関数参照が拒否されるべきでした' });
+      results.success = false;
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        results.tests.push({ name: '無効関数参照テスト', status: 'PASSED', message: 'null関数参照が適切に拒否されました' });
+      } else {
+        results.tests.push({ name: '無効関数参照テスト', status: 'FAILED', message: `予期しないエラー: ${error.name}` });
+        results.success = false;
+      }
+    }
+    
+    // テスト7: 関数シグネチャ検証テスト
+    try {
+      const invalidFunc = function(employee) { return { success: true }; }; // パラメータ数が不足
+      registerFunction('processEmployeeData', invalidFunc, true);
+      results.tests.push({ name: '関数シグネチャ検証テスト', status: 'FAILED', message: '無効なシグネチャが拒否されるべきでした' });
+      results.success = false;
+    } catch (error) {
+      if (error instanceof ValidationError && error.message.includes('パラメータ数が無効')) {
+        results.tests.push({ name: '関数シグネチャ検証テスト', status: 'PASSED', message: '無効なシグネチャが適切に拒否されました' });
+      } else {
+        results.tests.push({ name: '関数シグネチャ検証テスト', status: 'FAILED', message: `予期しないエラー: ${error.message}` });
+        results.success = false;
+      }
+    }
+    
+    // テスト8: 存在しない関数の削除テスト
+    try {
+      const result = unregisterFunction('nonExistentFunction');
+      if (!result) {
+        results.tests.push({ name: '存在しない関数削除テスト', status: 'PASSED', message: '存在しない関数の削除が適切に処理されました' });
+      } else {
+        results.tests.push({ name: '存在しない関数削除テスト', status: 'FAILED', message: '存在しない関数が削除されてしまいました' });
+        results.success = false;
+      }
+    } catch (error) {
+      results.tests.push({ name: '存在しない関数削除テスト', status: 'FAILED', message: `予期しないエラー: ${error.message}` });
+      results.success = false;
+    }
+    
+    // テスト結果のログ出力
+    Logger.log('=== 安全性強化テスト結果 ===');
+    results.tests.forEach(test => {
+      Logger.log(`${test.status}: ${test.name} - ${test.message}`);
+    });
+    
+    if (results.success) {
+      Logger.log('✅ すべての安全性強化テストが成功しました');
+    } else {
+      Logger.log('❌ 一部の安全性強化テストが失敗しました');
+    }
+    
+  } catch (error) {
+    results.success = false;
+    results.errors.push(error.toString());
+    Logger.log(`安全性強化テスト実行中にエラーが発生: ${error.toString()}`);
+  }
+  
+  return results;
 }

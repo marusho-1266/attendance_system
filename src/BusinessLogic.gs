@@ -60,19 +60,12 @@ function calculateDailyWorkTime(employeeId, date) {
     const clockInMinutes = timeToMinutes(timeEntries.clockIn);
     const clockOutMinutes = timeToMinutes(timeEntries.clockOut);
     
-    // 出勤時刻が退勤時刻より後の場合（日をまたがない場合）
+    // 深夜をまたぐシフトの検出と処理
+    // 出勤時刻が退勤時刻より後の場合、深夜シフトとして扱う
     if (clockInMinutes > clockOutMinutes) {
-      Logger.log(`時刻データ不整合 (${employeeId}, ${formatDate(date)}): 出勤時刻(${timeEntries.clockIn}) > 退勤時刻(${timeEntries.clockOut})`);
-      return {
-        workMinutes: 0,
-        overtimeMinutes: 0,
-        breakMinutes: 0,
-        lateMinutes: 0,
-        earlyLeaveMinutes: 0,
-        nightWorkMinutes: 0,
-        status: 'INCOMPLETE',
-        message: '出勤時刻が退勤時刻より後になっています'
-      };
+      Logger.log(`深夜シフト検出 (${employeeId}, ${formatDate(date)}): 出勤時刻(${timeEntries.clockIn}) > 退勤時刻(${timeEntries.clockOut}) - 深夜シフトとして処理`);
+      // 深夜シフトの場合、calculateTimeDifference関数が自動的に24時間を加算して処理するため、
+      // 特別な処理は不要（calculateTimeDifference関数内で既に対応済み）
     }
     
     // 基本労働時間を計算

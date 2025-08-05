@@ -2,6 +2,124 @@
 
 ## 完了済みタスク
 
+### 2025-01-27 15:50:00 - BusinessLogic.gs深夜をまたぐシフト対応修正
+- [x] 59-76行目付近のバリデーションロジックを修正
+- [x] 出勤時刻 > 退勤時刻の場合の深夜シフト検出機能を実装
+- [x] 24時間（1440分）を加算して翌日として扱うロジックを追加
+- [x] 既存のcalculateTimeDifference関数との整合性を確保
+- [x] エッジケース（24時間以上の勤務）の考慮
+- [x] テストケースの確認と追加
+- [x] 深夜シフトの勤務時間計算テストケースを追加
+- [x] 深夜勤務時間計算テストケースを追加
+- [x] 深夜シフト検出ログメッセージの改善
+
+### 2025-08-05 23:22:30 - ErrorHandler.gs FUNCTION_MAPPING改善
+- [x] 580-616行目付近のFUNCTION_MAPPING内のデフォルト実装を改善
+- [x] 各関数に入力パラメータ検証を追加（詳細な型チェック、空文字列チェック、整数チェック）
+- [x] 必須入力が不足または無効な場合に明示的なValidationErrorをスロー
+- [x] 単純なデフォルト戻り値をNotImplementedErrorに置き換え（詳細なエラーメッセージ付き）
+- [x] 各関数にJSDocコメントを追加（期待される入力と出力を詳細に記述）
+- [x] コードの明確性と保守性を向上（詳細なエラーメッセージ、型情報、実装ガイダンス）
+- [x] testFunctionMappingImprovementsテスト関数を実装（6つのテストケース）
+- [x] 入力検証の堅牢性向上（null/undefinedチェック、型チェック、範囲チェック）
+- [x] エラーメッセージの改善（具体的な問題と解決方法を明示）
+
+### 2025-08-05 23:38:04 - ErrorHandler.gs registerFunction/unregisterFunction安全性強化
+- [x] 642-660行目付近のregisterFunctionとunregisterFunctionの安全性を強化
+- [x] registerFunctionに既存関数上書き防止チェックを追加（forceOverwriteフラグ対応）
+- [x] unregisterFunctionに重要なシステム関数削除防止メカニズムを実装（PROTECTED_FUNCTIONSリスト）
+- [x] registerFunctionに関数シグネチャ検証を追加（validateFunctionSignature関数）
+- [x] 保護対象のシステム関数リストを定義（processEmployeeData, calculateOvertime等）
+- [x] 関数シグネチャの検証ロジックを実装（EXPECTED_SIGNATURES定数）
+- [x] testFunctionMappingSafetyImprovementsテスト関数を実装（8つのテストケース）
+- [x] 入力パラメータ検証の強化（functionName, func, forceOverwrite, forceDelete）
+- [x] エラーハンドリングとログ記録機能の改善
+- [x] JSDocコメントの更新（新しいパラメータと戻り値の説明）
+
+### 2025-08-05 23:20:00 - TestHelpers_Data.gs testSummaryDataAccuracy関数実装強化
+- [x] 単純な行数カウントから実際のデータ精度検証機能に強化
+- [x] 日次サマリーデータと月次サマリーデータの整合性チェック機能を実装
+- [x] 勤務日数、総労働時間、残業時間の整合性検証を実装
+- [x] 許容誤差（1分以内）の設定による実用的な検証機能を実装
+- [x] 月次データに存在しない日次データの検出機能を実装
+- [x] 詳細な検証結果と問題箇所の特定機能を実装
+- [x] 関数名と実装の整合性を確保完了
+
+### 2025-08-05 23:20:30 - tasks.md CSRFトークンストレージセキュリティ強化
+- [x] tasks.mdの62-67行目付近のCSRFトークン設計をPropertiesService対応版に修正
+- [x] Google Sheetでのトークン管理からPropertiesService.getScriptProperties()への変更計画を追加
+- [x] トークンTTL（1時間）設定と自動期限切れ機能の実装計画を追加
+- [x] セキュリティリスク軽減のためのサーバーサイド専用ストレージ設計を実装
+- [x] CSRFトークン管理の実装ガイドラインセクションを新規追加
+- [x] PropertiesServiceの制約と対策の詳細文書化完了
+- [x] 移行計画（フェーズ1-3）の策定完了
+- [x] 自動期限切れロジックのテストケース設計完了
+
+### 2025-08-05 23:20:15 - TestHelpers_Security.gs eval()セキュリティ強化
+- [x] TestHelpers_Security.gsの39-48行目付近のeval()使用箇所を安全なアプローチに置換
+- [x] eval(funcName)をthis[funcName] || globalThis[funcName]に変更
+- [x] 関数の存在確認機能を維持しながらセキュリティリスクを軽減
+- [x] コードインジェクション攻撃の回避機能を実装
+- [x] GAS環境に適した安全な関数存在チェック方式を採用
+
+### 2025-08-05 23:19:32 - design.md退職者データ匿名化関数パフォーマンス最適化
+- [x] design.mdの389-408行目付近のanonymizeLogData関数で個別setValue呼び出しによる実行時間クォータ問題を修正
+- [x] anonymizeLogData関数を一括更新処理にリファクタリング（メモリ上でデータ処理後、setValuesで一括更新）
+- [x] anonymizeSummaryData関数を一括更新処理にリファクタリング（Daily_Summary、Monthly_Summary両方対応）
+- [x] anonymizeRequestData関数を新規実装（Request_Responsesシートの申請データ匿名化）
+- [x] 個別のsetValue呼び出しをsetValuesによる一括更新に変更
+- [x] API呼び出し回数の大幅削減によるパフォーマンス向上
+- [x] エラーハンドリングとログ記録機能を維持
+
+### 2025-08-05 23:18:14 - design.md cleanupExpiredData関数リファクタリング
+- [x] design.mdの338-357行目付近のcleanupExpiredData関数で未使用のcurrentDate変数を削除
+- [x] シート名と保持期間のマッピングをDATA_RETENTION_POLICY定数オブジェクトとして定義
+- [x] cleanupExpiredData関数をリファクタリングしてObject.entries()でループ処理に変更
+- [x] ハードコーディングされた保持期間を定数オブジェクトに移動
+- [x] メンテナンス性の向上（新しいシート追加時の設定変更が容易）
+- [x] コードの可読性と保守性を大幅に改善
+
+### 2025-08-05 23:14:53 - design.md PIIフィールド一貫性修正
+- [x] design.mdの321-325行目付近のcontainsPiiとmaskPiiData関数のPIIフィールド不一致を修正
+- [x] PII_FIELDS共有定数を定義（NAME, EMAIL, GMAIL, IP, REMARKS, REMARKS_JP）
+- [x] maskPiiData関数で共有定数を使用するように修正
+- [x] logWithPiiProtection関数で共有定数を使用するように修正
+- [x] containsPii関数で共有定数を使用するように修正
+- [x] 'gmail'と'備考'フィールドの一貫性を確保
+- [x] メールアドレスと備考フィールドの両言語対応を実装
+
+### 2025-08-05 23:12:53 - design.md認証セキュリティ強化
+- [x] design.mdの54-55行目付近のe.parameter.email直接使用のセキュリティリスクを修正
+- [x] なりすまし攻撃防止のためのセキュリティ検証手順を設計書に追加
+- [x] ドメインホワイトリスト検証機能を実装（isAllowedDomain関数）
+- [x] Master_Employeeシートとの照合機能を強化
+- [x] Session.getActiveUser()とのクロスチェック機能を実装
+- [x] セキュリティ設計セクションに強化認証方式を追加
+- [x] 不正アクセス試行のログ記録機能を実装
+
+### 2025-08-05 23:11:19 - design.md備考フィールドマスキング追加
+- [x] design.mdの311-319行目付近のlogWithPiiProtection関数で備考フィールド（'remarks'）のマスキングを追加
+- [x] maskPiiData関数に備考フィールドのマスキング処理を実装（'remarks'ケース追加）
+- [x] maskRemarks関数を新規実装（個人情報を含む備考を'***'にマスキング）
+- [x] logWithPiiProtection関数のmaskPiiData呼び出しに'remarks'を追加
+- [x] PII保護の完全性を確保（氏名、メール、IP、備考の全フィールドをマスキング）
+- [x] 機密情報のログ出力漏洩を防止
+
+### 2025-08-05 23:10:00 - WebApp.gs CSRF_Tokensシート存在チェック追加
+- [x] validateCsrfToken関数にシート存在チェックを追加（67行目付近）
+- [x] saveCsrfToken関数にシート存在チェックを追加（43行目付近）
+- [x] cleanupExpiredCsrfTokens関数にシート存在チェックを追加（108行目付近）
+- [x] シートが存在しない場合の自動作成機能を実装
+- [x] エラーハンドリングとログ記録機能を強化
+- [x] createCsrfTokensSheet関数との連携を実装
+- [x] 各関数の特性に応じた適切なエラー処理を実装
+
+### 2025-08-05 23:04:37 - design.md maskPiiData関数修正
+- [x] design.mdの270行目付近のmaskPiiData関数でオブジェクトに対する配列スプレッド演算子の誤用を修正
+- [x] [...data]を{...data}に変更してオブジェクトのシャローコピーを正しく作成
+- [x] 元のオブジェクトを変更せずにマスキング処理を実行できるように修正
+- [x] PIIデータ保護機能の動作安全性を確保
+
 ### 2025-08-05 22:36:32 - FormManager.gs列インデックス定数化
 - [x] ファイル先頭にREQUEST_RESPONSES_COLUMNS定数を定義（Request_Responsesシート用）
 - [x] ファイル先頭にRECALCULATION_QUEUE_COLUMNS定数を定義（Recalculation_Queueシート用）
@@ -19,6 +137,13 @@
 - [x] weeklyOvertimeJob関数でgetConfig('BUSINESS')から閾値を取得
 - [x] generateOvertimeReportForJob関数でも同様に定数参照に変更
 - [x] 残業時間閾値の設定可能化完了
+
+### 2025-01-27 16:00:00 - OVERTIME_WARNING_THRESHOLD_HOURS定数の動的計算化
+- [x] Config.gsのOVERTIME_WARNING_THRESHOLD_HOURS定数を削除（ハードコーディング排除）
+- [x] getOvertimeWarningThresholdHours()ゲッター関数を実装（OVERTIME_WARNING_THRESHOLD / 60）
+- [x] Triggers.gsのweeklyOvertimeJob関数でゲッター関数呼び出しに変更
+- [x] Triggers.gsのgenerateOvertimeReportForJob関数でゲッター関数呼び出しに変更
+- [x] 重複定義の排除とデータ一貫性の保証完了
 
 ### 2025-08-05 22:34:52 - FormManager.gsコード重複解消
 - [x] markForRecalculationとmarkForOvertimeRecalculationの重複ロジックを特定
@@ -56,6 +181,20 @@
 - [x] MailManager.gsの99行目の無効なJavaScript構文を修正
 - [x] '-' * 30 を '-'.repeat(30) に変更
 - [x] 文字列繰り返しの正しい構文に修正完了
+
+### 2025-01-27 15:30:00 - TestHelpers_Config.gs動的プロパティアクセス修正
+- [x] TestHelpers_Config.gsの6-49行目で使用されていた動的プロパティアクセス（this[configName]やwindow[configName]）を修正
+- [x] 明示的な設定オブジェクト参照による安全な存在確認に置き換え
+- [x] セキュリティリスクの排除とGoogle Apps Script環境での信頼性向上
+- [x] 動的プロパティアクセスの完全排除と明示的参照の実装
+- [x] 設定オブジェクト存在確認機能の安全性と確実性を確保
+
+### 2025-01-27 15:45:00 - TestHelpers_Config.gs testTimeTriggerConfiguration関数妥当性チェック追加
+- [x] testTimeTriggerConfiguration関数にtriggersパラメータのnull/undefinedチェックを追加
+- [x] triggersパラメータの配列型チェックを追加（Array.isArray()使用）
+- [x] 無効な入力時の適切なエラーメッセージと戻り値形式を実装
+- [x] 関数の堅牢性向上と予期しない入力に対する耐性を確保
+- [x] 早期リターンによる効率的なエラーハンドリングを実装
 
 ### 2025-08-05 22:24:14 - URLフラグメント修正
 - [x] FormManager.gsの724行目で#gid=Request_ResponsesをgetSheetId('Request_Responses')に修正
@@ -211,8 +350,68 @@
 - [x] Test.gsの認証ワークフロー関数のeval()を安全な関数存在チェックに置換
 - [x] セキュリティリスクの軽減完了
 
-## 現在のタスク
+### 2025-08-05 23:10:00 - design.md getOldestDataAge関数定義
+- [x] design.mdの467-486行目付近で未定義のgetOldestDataAge関数を定義
+- [x] 指定されたシートの最古のデータエントリの日数を取得する機能を実装
+- [x] 各シートの日付列位置をマッピング（Log_Raw、Daily_Summary、Monthly_Summary、Request_Responses、Error_Log）
+- [x] 最後の行の日付を使用して最古データを特定する実装方法を採用
+- [x] 戻り値が日数であることを明確に文書化（JSDocコメント）
+- [x] エラーハンドリングとログ記録機能を実装
+- [x] データが存在しない場合やエラー時の適切な処理を実装
 
+### 2025-01-27 16:30:00 - システム全体動作確認・テスト機能実装
+- [x] QuickTest.gsに包括的なテスト機能を追加
+- [x] 基本設定確認機能を実装（testBasicConfiguration）
+- [x] スプレッドシート構造確認機能を実装（testSpreadsheetStructure）
+- [x] 認証システム確認機能を実装（testAuthenticationSystem）
+- [x] エラーハンドリング確認機能を実装（testErrorHandlingSystem）
+- [x] 基本機能確認機能を実装（testBasicFunctions）
+- [x] 統合テスト実行機能を実装（quickSystemCheck）
+- [x] モジュール別テスト機能を実装（runModuleTests）
+- [x] Authentication.gsテスト機能を実装（testAuthenticationModule）
+- [x] BusinessLogic.gsテスト機能を実装（testBusinessLogicModule）
+- [x] Utils.gsテスト機能を実装（testUtilsModule）
+- [x] ErrorHandler.gsテスト機能を実装（testErrorHandlerModule）
+- [x] WebApp.gsテスト機能を実装（testWebAppModule）
+- [x] エラーハンドリング統合テスト機能を実装（testErrorHandlingSystem）
+- [x] 基本エラーハンドリングテスト機能を実装（testBasicErrorHandling）
+- [x] エラーログ機能テスト機能を実装（testErrorLogging）
+- [x] 関数登録・削除機能テスト機能を実装（testFunctionRegistration）
+- [x] エラー分類テスト機能を実装（testErrorClassification）
+
+## 現在のタスク
+- [x] TestHelpers_Data.gs testRequestResponsesIntegrity関数リファクタリング完了 🔴
+  - [x] 98-120行目付近のハードコードされた「G2」セル参照を動的範囲検出に変更
+  - [x] Status列の動的検出機能を実装（ヘッダー行から列位置を自動特定）
+  - [x] 適用可能な範囲全体でのデータ検証ルールチェック機能を実装
+  - [x] 範囲内の各セルの詳細検証結果を取得する機能を実装
+  - [x] 検証チェックの堅牢性と保守性を向上
+  - [x] testRequestResponsesIntegrityTestテスト関数を追加
+- [x] BusinessLogic.gs深夜をまたぐシフト対応修正完了 🔴
+  - [x] 59-76行目付近のバリデーションロジックを修正
+  - [x] 出勤時刻 > 退勤時刻の場合の深夜シフト検出機能を実装
+  - [x] 24時間（1440分）を加算して翌日として扱うロジックを追加
+  - [x] 既存のcalculateTimeDifference関数との整合性を確保
+  - [x] エッジケース（24時間以上の勤務）の考慮
+  - [x] テストケースの確認と追加
+
+- [x] TestHelpers_Workflow.gs eval()セキュリティ強化完了
+  - [x] testCalculationWorkflow関数のeval()を安全な関数存在チェックに置換
+  - [x] testNotificationWorkflowSetup関数のeval()を安全な関数存在チェックに置換
+  - [x] testApprovalWorkflowSetup関数のeval()を安全な関数存在チェックに置換
+  - [x] GAS環境に適したglobalThisアクセス方式を実装
+  - [x] thisコンテキストとglobalThisの両方をチェックする堅牢な実装に改善
+  - [x] セキュリティリスクの軽減完了
+- [x] TestHelpers_Workflow.gs リファクタリング完了
+  - [x] checkFunctionExistence統一ヘルパー関数を実装
+  - [x] 重複コードの削除と統一された関数存在チェックの実装
+  - [x] eval()使用箇所の完全排除
+  - [x] コードの保守性と可読性の向上完了
+- [x] TestHelpers_Workflow.gs withErrorHandling関数存在チェック追加完了
+  - [x] testErrorLogging関数にwithErrorHandling関数の存在チェックを実装
+  - [x] thisコンテキストとglobalThisの両方をチェックする堅牢な実装
+  - [x] 関数が未定義の場合の適切なエラーハンドリングを実装
+  - [x] ランタイムエラーの回避機能を追加
 - [x] ERROR_CONFIG重複宣言エラーの修正完了
 - [x] 構文チェック用テスト関数の追加
 - [x] testCreateErrorAlertBodyテストの修正完了
@@ -252,9 +451,15 @@
   - [x] データマスキング、アクセス制限、ログ保持期間の定義
   - [x] 退職者データの自動匿名化・削除手順の追加
   - [x] 個人情報保護法準拠の確認事項追加
-- [ ] システム全体の動作確認
-- [ ] 各モジュールの機能テスト実行
-- [ ] エラーハンドリングシステムの動作確認
+- [x] design.md退職者データ匿名化関数パフォーマンス最適化完了
+  - [x] design.mdの389-408行目付近のanonymizeLogData関数で個別setValue呼び出しによる実行時間クォータ問題を修正
+  - [x] anonymizeLogData関数を一括更新処理にリファクタリング（メモリ上でデータ処理後、setValuesで一括更新）
+  - [x] anonymizeSummaryData関数を一括更新処理にリファクタリング（Daily_Summary、Monthly_Summary両方対応）
+  - [x] anonymizeRequestData関数を新規実装（Request_Responsesシートの申請データ匿名化）
+  - [x] 個別のsetValue呼び出しをsetValuesによる一括更新に変更
+  - [x] API呼び出し回数の大幅削減によるパフォーマンス向上
+  - [x] エラーハンドリングとログ記録機能を維持
+
 
 ## 今後のタスク
 

@@ -5,29 +5,53 @@
  */
 function testConfigObjectsExistence() {
   try {
-    const configObjects = [
-      'SYSTEM_CONFIG',
-      'SHEET_CONFIG',
-      'BUSINESS_RULES',
-      'AUTOMATION_CONFIG',
-      'MAIL_CONFIG',
-      'ERROR_CONFIG',
-      'SECURITY_CONFIG'
-    ];
-    
     const results = {};
     let allExist = true;
     
-    configObjects.forEach(configName => {
+    // 明示的な設定オブジェクト参照による安全な存在確認
+    const configChecks = [
+      {
+        name: 'SYSTEM_CONFIG',
+        config: typeof SYSTEM_CONFIG !== 'undefined' ? SYSTEM_CONFIG : null
+      },
+      {
+        name: 'SHEET_CONFIG',
+        config: typeof SHEET_CONFIG !== 'undefined' ? SHEET_CONFIG : null
+      },
+      {
+        name: 'BUSINESS_RULES',
+        config: typeof BUSINESS_RULES !== 'undefined' ? BUSINESS_RULES : null
+      },
+      {
+        name: 'AUTOMATION_CONFIG',
+        config: typeof AUTOMATION_CONFIG !== 'undefined' ? AUTOMATION_CONFIG : null
+      },
+      {
+        name: 'MAIL_CONFIG',
+        config: typeof MAIL_CONFIG !== 'undefined' ? MAIL_CONFIG : null
+      },
+      {
+        name: 'ERROR_CONFIG',
+        config: typeof ERROR_CONFIG !== 'undefined' ? ERROR_CONFIG : null
+      },
+      {
+        name: 'SECURITY_CONFIG',
+        config: typeof SECURITY_CONFIG !== 'undefined' ? SECURITY_CONFIG : null
+      }
+    ];
+    
+    configChecks.forEach(check => {
       try {
-        // 安全な関数存在チェック - eval()の代わりにグローバルスコープから直接アクセス
-        const config = this[configName] || (typeof window !== 'undefined' ? window[configName] : null);
-        results[configName] = {
-          exists: config !== null && config !== undefined,
-          type: typeof config
+        results[check.name] = {
+          exists: check.config !== null && check.config !== undefined,
+          type: typeof check.config
         };
+        
+        if (!results[check.name].exists) {
+          allExist = false;
+        }
       } catch (error) {
-        results[configName] = {
+        results[check.name] = {
           exists: false,
           error: error.message
         };
@@ -103,6 +127,21 @@ function testAdminConfiguration() {
  */
 function testTimeTriggerConfiguration(triggers) {
   try {
+    // triggersパラメータの妥当性チェック
+    if (!triggers) {
+      return {
+        success: false,
+        error: 'triggersパラメータがnullまたはundefinedです'
+      };
+    }
+    
+    if (!Array.isArray(triggers)) {
+      return {
+        success: false,
+        error: `triggersパラメータが配列ではありません。型: ${typeof triggers}`
+      };
+    }
+    
     const timeBasedTriggers = triggers.filter(t => t.getTriggerSource() === ScriptApp.TriggerSource.CLOCK);
     
     return {

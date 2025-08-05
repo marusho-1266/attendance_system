@@ -59,11 +59,46 @@ function getEmployeeInfo(email)
 **責任:**
 - 複数の認証方法によるユーザー識別
   - `Session.getActiveUser().getEmail()`（プライマリ）
-  - `e.parameter.email`（WebAppイベントからの取得）
+  - `e.parameter.email`（WebAppイベントからの取得、セキュリティ検証必須）
   - フォールバック認証方法
 - 従業員マスタとの照合
 - アクセス権限の検証
 - デプロイメント設定に応じた認証方法の自動選択
+
+**セキュリティ検証手順:**
+```javascript
+// なりすまし攻撃防止のための認証検証
+function authenticateUserFromEvent(e) {
+  const providedEmail = e.parameter.email;
+  
+  // 1. ドメインホワイトリスト検証
+  if (!isAllowedDomain(providedEmail)) {
+    throw new Error('許可されていないドメインです');
+  }
+  
+  // 2. Master_Employeeシートとの照合
+  const employee = getEmployeeInfo(providedEmail);
+  if (!employee) {
+    throw new Error('従業員マスタに存在しません');
+  }
+  
+  // 3. Session.getActiveUser()とのクロスチェック
+  const activeUser = Session.getActiveUser().getEmail();
+  if (providedEmail !== activeUser) {
+    Logger.log(`なりすまし攻撃の可能性: ${providedEmail} vs ${activeUser}`);
+    throw new Error('認証情報の不一致');
+  }
+  
+  return employee;
+}
+
+// ドメインホワイトリスト検証
+function isAllowedDomain(email) {
+  const allowedDomains = ['company.com', 'trusted-partner.com'];
+  const domain = email.split('@')[1];
+  return allowedDomains.includes(domain);
+}
+```
 
 ### 2. 打刻処理コンポーネント
 
@@ -267,16 +302,28 @@ updatedEmployees.forEach(emp => updateDailySummary(emp.id, date));
 
 #### データマスキング機能
 ```javascript
+// PIIフィールドの共有定数定義
+const PII_FIELDS = {
+  NAME: 'name',
+  EMAIL: 'email',
+  GMAIL: 'gmail',
+  IP: 'ip',
+  REMARKS: 'remarks',
+  REMARKS_JP: '備考'
+};
+
 // PIIフィールドのマスキング処理
 function maskPiiData(data, fields) {
-  const maskedData = [...data];
+  const maskedData = {...data};
   fields.forEach(field => {
-    if (field === 'name') {
+    if (field === PII_FIELDS.NAME) {
       maskedData[field] = maskName(data[field]);
-    } else if (field === 'email') {
+    } else if (field === PII_FIELDS.EMAIL || field === PII_FIELDS.GMAIL) {
       maskedData[field] = maskEmail(data[field]);
-    } else if (field === 'ip') {
+    } else if (field === PII_FIELDS.IP) {
       maskedData[field] = maskIpAddress(data[field]);
+    } else if (field === PII_FIELDS.REMARKS || field === PII_FIELDS.REMARKS_JP) {
+      maskedData[field] = maskRemarks(data[field]);
     }
   });
   return maskedData;
@@ -304,6 +351,12 @@ function maskIpAddress(ip) {
   }
   return ip;
 }
+
+// 備考マスキング（例：個人情報を含む備考 → ***）
+function maskRemarks(remarks) {
+  if (!remarks || remarks.trim() === '') return remarks;
+  return '***';
+}
 ```
 
 #### アクセス制限
@@ -311,7 +364,14 @@ function maskIpAddress(ip) {
 // ログ出力時のPII保護
 function logWithPiiProtection(level, message, data = null) {
   if (data && containsPii(data)) {
-    const maskedData = maskPiiData(data, ['name', 'email', 'ip']);
+    const maskedData = maskPiiData(data, [
+      PII_FIELDS.NAME, 
+      PII_FIELDS.EMAIL, 
+      PII_FIELDS.GMAIL, 
+      PII_FIELDS.IP, 
+      PII_FIELDS.REMARKS, 
+      PII_FIELDS.REMARKS_JP
+    ]);
     Logger.log(`[${level}] ${message}: ${JSON.stringify(maskedData)}`);
   } else {
     Logger.log(`[${level}] ${message}`);
@@ -320,7 +380,14 @@ function logWithPiiProtection(level, message, data = null) {
 
 // PII含有チェック
 function containsPii(data) {
-  const piiFields = ['name', 'email', 'gmail', 'ip', '備考'];
+  const piiFields = [
+    PII_FIELDS.NAME, 
+    PII_FIELDS.EMAIL, 
+    PII_FIELDS.GMAIL, 
+    PII_FIELDS.IP, 
+    PII_FIELDS.REMARKS, 
+    PII_FIELDS.REMARKS_JP
+  ];
   return piiFields.some(field => data.hasOwnProperty(field) && data[field]);
 }
 ```
@@ -336,24 +403,21 @@ function containsPii(data) {
 
 #### 自動削除機能
 ```javascript
+// データ保持期間の定義（日数）
+const DATA_RETENTION_POLICY = {
+  'Log_Raw': 3 * 365,           // 3年間保持（労働基準法第109条準拠）
+  'Daily_Summary': 7 * 365,     // 7年間保持（労働基準法第109条準拠）
+  'Monthly_Summary': 7 * 365,   // 7年間保持（労働基準法第109条準拠）
+  'Request_Responses': 3 * 365, // 3年間保持（申請記録として）
+  'Error_Log': 365              // 1年間保持（システム運用記録）
+};
+
 // 期限切れデータの自動削除
 function cleanupExpiredData() {
-  const currentDate = new Date();
-  
-  // Log_Raw: 3年経過データ削除
-  cleanupSheetData('Log_Raw', 3 * 365);
-  
-  // Daily_Summary: 7年経過データ削除
-  cleanupSheetData('Daily_Summary', 7 * 365);
-  
-  // Monthly_Summary: 7年経過データ削除
-  cleanupSheetData('Monthly_Summary', 7 * 365);
-  
-  // Request_Responses: 3年経過データ削除
-  cleanupSheetData('Request_Responses', 3 * 365);
-  
-  // Error_Log: 1年経過データ削除
-  cleanupSheetData('Error_Log', 365);
+  // 各シートの保持期間に基づいて期限切れデータを削除
+  Object.entries(DATA_RETENTION_POLICY).forEach(([sheetName, retentionDays]) => {
+    cleanupSheetData(sheetName, retentionDays);
+  });
 }
 
 // シート別データ削除
@@ -406,22 +470,32 @@ function processRetiredEmployeeData(employeeId) {
   Logger.log(`退職者データ処理完了: ${employeeId}`);
 }
 
-// ログデータの匿名化
+// ログデータの匿名化（一括更新版）
 function anonymizeLogData(employeeId) {
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Log_Raw');
-  const data = sheet.getDataRange().getValues();
+  if (!sheet) return;
   
+  const data = sheet.getDataRange().getValues();
+  const lastRow = data.length;
+  const lastCol = data[0].length;
+  
+  // メモリ上でデータを処理
   for (let i = 1; i < data.length; i++) {
     if (data[i][1] === employeeId) { // 社員ID列
-      // 氏名を匿名化
-      sheet.getRange(i + 1, 3).setValue('退職者***');
-      // 備考をクリア
-      sheet.getRange(i + 1, 6).setValue('');
+      // 氏名を匿名化（列C、インデックス2）
+      data[i][2] = '退職者***';
+      // 備考をクリア（列F、インデックス5）
+      data[i][5] = '';
     }
   }
+  
+  // 一括更新でAPI呼び出しを削減
+  sheet.getRange(1, 1, lastRow, lastCol).setValues(data);
+  
+  Logger.log(`Log_Raw: 退職者データ匿名化完了 (${employeeId})`);
 }
 
-// サマリーデータの匿名化
+// サマリーデータの匿名化（一括更新版）
 function anonymizeSummaryData(employeeId) {
   const sheets = ['Daily_Summary', 'Monthly_Summary'];
   
@@ -430,14 +504,47 @@ function anonymizeSummaryData(employeeId) {
     if (!sheet) return;
     
     const data = sheet.getDataRange().getValues();
+    const lastRow = data.length;
+    const lastCol = data[0].length;
+    
+    // メモリ上でデータを処理
     for (let i = 1; i < data.length; i++) {
       if (data[i][1] === employeeId) { // 社員ID列
-        // 備考を匿名化
-        const lastCol = data[i].length;
-        sheet.getRange(i + 1, lastCol).setValue('退職者データ');
+        // 備考を匿名化（最後の列）
+        data[i][lastCol - 1] = '退職者データ';
       }
     }
+    
+    // 一括更新でAPI呼び出しを削減
+    sheet.getRange(1, 1, lastRow, lastCol).setValues(data);
+    
+    Logger.log(`${sheetName}: 退職者データ匿名化完了 (${employeeId})`);
   });
+}
+
+// 申請データの匿名化（一括更新版）
+function anonymizeRequestData(employeeId) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Request_Responses');
+  if (!sheet) return;
+  
+  const data = sheet.getDataRange().getValues();
+  const lastRow = data.length;
+  const lastCol = data[0].length;
+  
+  // メモリ上でデータを処理
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][1] === employeeId) { // 社員ID列
+      // 詳細を匿名化（列D、インデックス3）
+      data[i][3] = '退職者データ';
+      // 希望値をクリア（列E、インデックス4）
+      data[i][4] = '';
+    }
+  }
+  
+  // 一括更新でAPI呼び出しを削減
+  sheet.getRange(1, 1, lastRow, lastCol).setValues(data);
+  
+  Logger.log(`Request_Responses: 退職者データ匿名化完了 (${employeeId})`);
 }
 ```
 
@@ -483,6 +590,64 @@ function checkDataRetentionPolicy() {
       compliant: actualDays <= policies[sheetName]
     };
   });
+}
+
+/**
+ * 指定されたシートの最古のデータエントリの日数を取得する
+ * @param {string} sheetName - 対象シート名
+ * @returns {number} 最古のデータからの経過日数（日単位）
+ * 
+ * 実装方法:
+ * - 各シートの日付列（通常は列A）から最古の日付を取得
+ * - 現在日付との差分を日数で計算
+ * - データが存在しない場合は0を返す
+ */
+function getOldestDataAge(sheetName) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    if (!sheet) {
+      Logger.log(`シートが見つかりません: ${sheetName}`);
+      return 0;
+    }
+    
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) { // ヘッダーのみまたはデータなし
+      Logger.log(`データが存在しません: ${sheetName}`);
+      return 0;
+    }
+    
+    // 各シートの日付列の位置を定義
+    const dateColumnMap = {
+      'Log_Raw': 0,        // 列A: タイムスタンプ
+      'Daily_Summary': 0,  // 列A: 日付
+      'Monthly_Summary': 0, // 列A: 年月
+      'Request_Responses': 0, // 列A: タイムスタンプ
+      'Error_Log': 0       // 列A: タイムスタンプ
+    };
+    
+    const dateColumnIndex = dateColumnMap[sheetName] || 0;
+    
+    // 最古のデータを取得（最後の行の日付）
+    const oldestDateCell = sheet.getRange(lastRow, dateColumnIndex + 1);
+    const oldestDate = oldestDateCell.getValue();
+    
+    if (!oldestDate || !(oldestDate instanceof Date)) {
+      Logger.log(`有効な日付が見つかりません: ${sheetName}, 行: ${lastRow}`);
+      return 0;
+    }
+    
+    // 現在日付との差分を日数で計算
+    const currentDate = new Date();
+    const timeDiff = currentDate.getTime() - oldestDate.getTime();
+    const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+    
+    Logger.log(`${sheetName}: 最古データ日付 ${oldestDate}, 経過日数 ${daysDiff}日`);
+    return daysDiff;
+    
+  } catch (error) {
+    Logger.log(`getOldestDataAge エラー (${sheetName}): ${error.toString()}`);
+    return 0; // エラー時は0を返す
+  }
 }
 ```
 
@@ -606,6 +771,40 @@ function authenticateUser() {
     throw new Error('認証失敗: 従業員マスタに存在しません');
   }
   return employee;
+}
+
+// なりすまし攻撃防止のための強化認証
+function authenticateUserFromEvent(e) {
+  const providedEmail = e.parameter.email;
+  
+  // 1. ドメインホワイトリスト検証
+  if (!isAllowedDomain(providedEmail)) {
+    Logger.log(`不正なドメインアクセス試行: ${providedEmail}`);
+    throw new Error('許可されていないドメインです');
+  }
+  
+  // 2. Master_Employeeシートとの照合
+  const employee = getEmployeeInfo(providedEmail);
+  if (!employee) {
+    Logger.log(`存在しない従業員アクセス試行: ${providedEmail}`);
+    throw new Error('従業員マスタに存在しません');
+  }
+  
+  // 3. Session.getActiveUser()とのクロスチェック
+  const activeUser = Session.getActiveUser().getEmail();
+  if (providedEmail !== activeUser) {
+    Logger.log(`なりすまし攻撃の可能性: ${providedEmail} vs ${activeUser}`);
+    throw new Error('認証情報の不一致');
+  }
+  
+  return employee;
+}
+
+// ドメインホワイトリスト検証
+function isAllowedDomain(email) {
+  const allowedDomains = ['company.com', 'trusted-partner.com'];
+  const domain = email.split('@')[1];
+  return allowedDomains.includes(domain);
 }
 ```
 

@@ -58,7 +58,6 @@ const BUSINESS_RULES = {
   
   // 残業警告閾値
   OVERTIME_WARNING_THRESHOLD: 4800, // 80時間（4週間、分単位）
-  OVERTIME_WARNING_THRESHOLD_HOURS: 80, // 80時間（4週間、時間単位）
   
   // 深夜勤務時間帯
   NIGHT_WORK: {
@@ -183,6 +182,15 @@ function getConfig(category, key) {
   }
   
   return key ? configs[category][key] : configs[category];
+}
+
+/**
+ * 残業警告閾値（時間単位）を取得する関数
+ * OVERTIME_WARNING_THRESHOLD（分単位）を60で割って時間値を導出
+ * @return {number} 残業警告閾値（時間単位）
+ */
+function getOvertimeWarningThresholdHours() {
+  return BUSINESS_RULES.OVERTIME_WARNING_THRESHOLD / 60;
 }
 
 /**
